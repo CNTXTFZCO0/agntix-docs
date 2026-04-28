@@ -1,0 +1,57 @@
+---
+title: "Troubleshooting"
+description: "Common issues and how to fix them."
+---
+
+## Authentication
+
+<AccordionGroup>
+  <Accordion title="`401 Unauthorized` even though I'm sending a key">
+    Check that you're using the `x-api-key` header (not `Authorization`). Bearer tokens are for
+    Clerk JWTs only — see [Authentication](/authentication).
+  </Accordion>
+  <Accordion title="`403 Forbidden` from a known-good key">
+    The key is missing the required permission for that feature. Permissions are managed per-API-key
+    in the dashboard — make sure the key you're using has access to the resource you're calling.
+  </Accordion>
+</AccordionGroup>
+
+## Voice
+
+<AccordionGroup>
+  <Accordion title="Voice latency is high">
+    1. Check that your tools respond in <1s — see [Tools](/guides/tools).
+    2. Use a low-latency TTS (`elevenLabs flash_v2_5`, `cartesia sonic-turbo`) and STT (`deepgram nova-3`).
+    3. Enable `preemptiveSynthesis` and `allowInterruptions`.
+  </Accordion>
+  <Accordion title="Calls drop after 30 seconds">
+    Check your firewall is allowing UDP for LiveKit. Outbound-only TCP fallback exists but adds latency.
+  </Accordion>
+</AccordionGroup>
+
+## RAG
+
+<AccordionGroup>
+  <Accordion title="RAG retrieves irrelevant chunks">
+    1. Increase top-K to 4–6 for sparse corpora.
+    2. Enable Cohere reranking.
+    3. Improve document segmentation — Markdown headings beat paragraphs.
+  </Accordion>
+</AccordionGroup>
+
+## Webhooks
+
+<AccordionGroup>
+  <Accordion title="Signature verification fails">
+    You're verifying against a parsed body. Use the raw `Buffer` / `bytes` of the request — see
+    [Verifying signatures](/webhooks/verify-signatures).
+  </Accordion>
+  <Accordion title="Webhook never arrives">
+    Confirm your endpoint is on a public URL and returns 2xx within 15 seconds. Check the Webhooks
+    delivery log in the dashboard for the last attempt and response code.
+  </Accordion>
+</AccordionGroup>
+
+## Still stuck?
+
+Open a ticket: [support@agntix.ai](mailto:support@agntix.ai).

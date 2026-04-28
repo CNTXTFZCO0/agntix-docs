@@ -1,0 +1,63 @@
+---
+title: "Introduction"
+description: "Build production-ready AI chat and voice agents with the Agentix API."
+---
+
+import ApiBaseUrl from "/snippets/api-base-url.mdx";
+
+Agentix is the API for building **AI chat and voice agents**. One platform, three deployable surfaces:
+
+<CardGroup cols={3}>
+  <Card title="Chat" icon="comments" href="/guides/build-your-first-agent">
+    Conversational text agents you can embed in a web widget, mobile app, or back-office tool.
+  </Card>
+  <Card title="Voice" icon="phone" href="/guides/voice-calls">
+    Sub-second TTS / STT pipelines over LiveKit, Twilio, or Telnyx — inbound or outbound.
+  </Card>
+  <Card title="WhatsApp" icon="whatsapp" href="/guides/build-your-first-agent">
+    Wire any agent to a WhatsApp business number via Twilio.
+  </Card>
+</CardGroup>
+
+## Why Agentix
+
+- **Multi-modal out of the box.** Same agent definition runs in chat, voice, and WhatsApp.
+- **Production-grade reliability.** A unified gateway, durable webhooks, persistent sessions, retry-aware call campaigns.
+- **Bring your own model.** GPT, Claude, Gemini, plus any OpenAI-compatible endpoint.
+- **First-class RAG.** Upload documents, get cited answers — no vector DB to manage.
+- **Predictable pricing.** Per-second voice and per-1k-token chat. See [pricing](https://agntix.ai/pricing).
+
+## How this works
+
+<ApiBaseUrl />
+
+You'll mostly interact with three resources:
+
+1. **[Agents](/api-reference/agents)** — the configuration: prompt, model, tools, voice profile, knowledge store.
+2. **[Sessions](/api-reference/chat)** — a single conversation between a user and an agent.
+3. **[Messages](/api-reference/chat)** — the turns inside a session.
+
+Real-time updates flow over [Server-Sent Events](/guides/streaming-events) for live UIs and [Webhooks](/webhooks/overview) for back-office workflows.
+
+## Where to next
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Make your first authenticated call in under five minutes.
+  </Card>
+  <Card title="Build your first agent" icon="wand-magic-sparkles" href="/guides/build-your-first-agent">
+    Walkthrough: from API key to a working agent that answers user questions.
+  </Card>
+  <Card title="API Reference" icon="code" href="/api-reference/introduction">
+    The full, auto-generated reference for every public endpoint.
+  </Card>
+  <Card title="SDKs & examples" icon="square-code" href="/sdks/overview">
+    Copy-paste examples in cURL, Node.js, and Python.
+  </Card>
+</CardGroup>
+
+## Need help?
+
+- **Status & incidents:** [status.agntix.ai](https://status.agntix.ai)
+- **Email support:** [support@agntix.ai](mailto:support@agntix.ai)
+- **Changelog:** [/changelog](/changelog)

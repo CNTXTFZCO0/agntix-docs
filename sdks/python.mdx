@@ -1,0 +1,75 @@
+---
+title: "Python"
+description: "Async `httpx` client. ~30 lines of code, no SDK install required."
+---
+
+## Setup
+
+```bash
+pip install httpx
+export AGNTIX_API_KEY=pk_live_xxxxxxxxxxxxxxxx
+```
+
+## Tiny client
+
+```python
+import os
+import httpx
+
+BASE = "https://api.agntix.ai"
+HEADERS = {"x-api-key": os.environ["AGNTIX_API_KEY"]}
+
+class Agntix:
+    def __init__(self, base: str = BASE):
+        self._client = httpx.AsyncClient(base_url=base, headers=HEADERS, timeout=30)
+
+    async def request(self, method: str, path: str, **kwargs):
+        res = await self._client.request(method, path, **kwargs)
+        res.raise_for_status()
+        return res.json()
+
+    async def aclose(self) -> None:
+        await self._client.aclose()
+```
+
+## Examples
+
+```python
+import asyncio
+
+async def main():
+    api = Agntix()
+    try:
+        models = await api.request("GET", "/v1/chat/models")
+        agent = await api.request(
+            "POST",
+            "/v1/chat/agents",
+            json={
+                "name": "Support bot",
+                "modelId": "gpt-4o-mini",
+                "systemPrompt": "You are helpful.",
+            },
+        )
+        session = await api.request(
+            "POST",
+            "/v1/chat/chat/sessions",
+            json={"agentId": agent["id"]},
+        )
+        print(session)
+    finally:
+        await api.aclose()
+
+asyncio.run(main())
+```
+
+## Streaming SSE with `httpx-sse`
+
+```python
+import httpx
+from httpx_sse import aconnect_sse
+
+async with httpx.AsyncClient(base_url=BASE, headers=HEADERS, timeout=None) as client:
+    async with aconnect_sse(client, "GET", "/v1/chat/events/stream") as event_source:
+        async for sse in event_source.aiter_sse():
+            print(sse.event, sse.data)
+```

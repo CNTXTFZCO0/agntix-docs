@@ -1,0 +1,45 @@
+---
+title: "cURL"
+description: "Bash + cURL examples that mirror every page in the API reference."
+---
+
+## Auth header
+
+```bash
+export AGNTIX_API_KEY=pk_live_xxxxxxxxxxxxxxxx
+```
+
+```bash
+curl https://api.agntix.ai/v1/chat/models \
+  -H "x-api-key: $AGNTIX_API_KEY"
+```
+
+## Sending JSON
+
+```bash
+curl https://api.agntix.ai/v1/chat/agents \
+  -H "x-api-key: $AGNTIX_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Support bot","modelId":"gpt-4o-mini","systemPrompt":"You are helpful."}'
+```
+
+## Streaming SSE
+
+```bash
+curl -N https://api.agntix.ai/v1/chat/events/stream \
+  -H "x-api-key: $AGNTIX_API_KEY" \
+  -H "Accept: text/event-stream"
+```
+
+## Uploading a knowledge document
+
+```bash
+curl https://api.agntix.ai/v1/chat/knowledge-store/$STORE_ID/documents \
+  -H "x-api-key: $AGNTIX_API_KEY" \
+  -F "file=@./handbook.pdf" \
+  -F "title=Employee Handbook"
+```
+
+## Error inspection
+
+Add `-w "\n%{http_code}\n"` to print the status code on a separate line for scripting.

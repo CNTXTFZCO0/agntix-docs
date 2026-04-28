@@ -1,0 +1,170 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "maple",
+  "name": "Agentix",
+  "description": "Build, deploy, and operate AI chat and voice agents with the Agentix API.",
+  "colors": {
+    "primary": "#7c3aed",
+    "light": "#a78bfa",
+    "dark": "#5b21b6"
+  },
+  "favicon": "/images/logo/favicon.svg",
+  "logo": {
+    "light": "/images/logo/light.svg",
+    "dark": "/images/logo/dark.svg",
+    "href": "https://agntix.ai"
+  },
+  "background": {
+    "decoration": "gradient"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Dashboard",
+        "href": "https://app.agntix.ai"
+      },
+      {
+        "label": "Status",
+        "href": "https://status.agntix.ai"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Get an API Key",
+      "href": "https://app.agntix.ai/settings/api-keys"
+    }
+  },
+  "footer": {
+    "socials": {
+      "x": "https://x.com/agntix",
+      "github": "https://github.com/agntix",
+      "linkedin": "https://www.linkedin.com/company/agntix"
+    },
+    "links": [
+      {
+        "header": "Product",
+        "items": [
+          { "label": "Dashboard", "href": "https://app.agntix.ai" },
+          { "label": "Pricing", "href": "https://agntix.ai/pricing" },
+          { "label": "Changelog", "href": "/changelog" }
+        ]
+      },
+      {
+        "header": "Resources",
+        "items": [
+          { "label": "Status", "href": "https://status.agntix.ai" },
+          { "label": "Support", "href": "mailto:support@agntix.ai" }
+        ]
+      }
+    ]
+  },
+  "search": {
+    "prompt": "Search the Agentix docs..."
+  },
+  "seo": {
+    "indexing": "navigable",
+    "metatags": {
+      "robots": "index, follow"
+    }
+  },
+  "api": {
+    "playground": {
+      "display": "interactive"
+    },
+    "examples": {
+      "languages": ["curl", "javascript", "python"]
+    },
+    "mdx": {
+      "auth": {
+        "method": "bearer",
+        "name": "Authorization"
+      },
+      "server": "https://api.agntix.ai"
+    }
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": ["introduction", "quickstart", "authentication", "concepts"]
+          },
+          {
+            "group": "Build",
+            "pages": [
+              "guides/build-your-first-agent",
+              "guides/chat-with-rag",
+              "guides/voice-calls",
+              "guides/call-campaigns",
+              "guides/knowledge-stores",
+              "guides/tools"
+            ]
+          },
+          {
+            "group": "Real-time",
+            "pages": [
+              "guides/streaming-events",
+              "webhooks/overview",
+              "webhooks/events",
+              "webhooks/verify-signatures"
+            ]
+          },
+          {
+            "group": "SDKs & Examples",
+            "pages": ["sdks/overview", "sdks/curl", "sdks/node", "sdks/python"]
+          },
+          {
+            "group": "Operate",
+            "pages": [
+              "guides/rate-limits",
+              "guides/pagination",
+              "errors/error-codes",
+              "errors/troubleshooting"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": ["api-reference/introduction"]
+          },
+          {
+            "group": "API Reference",
+            "openapi": {
+              "source": "/openapi/agentix.json",
+              "directory": "api-reference"
+            }
+          }
+        ]
+      },
+      {
+        "tab": "Changelog",
+        "groups": [
+          {
+            "group": "Releases",
+            "pages": ["changelog"]
+          }
+        ]
+      }
+    ],
+    "global": {
+      "anchors": [
+        {
+          "anchor": "Status",
+          "href": "https://status.agntix.ai",
+          "icon": "signal-stream"
+        },
+        {
+          "anchor": "Support",
+          "href": "mailto:support@agntix.ai",
+          "icon": "envelope"
+        }
+      ]
+    }
+  }
+}

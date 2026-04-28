@@ -1,0 +1,36 @@
+---
+title: "Pagination"
+description: "Page-based pagination across list endpoints."
+---
+
+All list endpoints accept `page` and `limit` query parameters and return a consistent envelope:
+
+```bash
+curl "https://api.agntix.ai/v1/chat/agents?page=2&limit=20" \
+  -H "x-api-key: $AGNTIX_API_KEY"
+```
+
+```json
+{
+  "data": [ /* items */ ],
+  "pagination": {
+    "page": 2,
+    "limit": 20,
+    "total": 137,
+    "totalPages": 7
+  }
+}
+```
+
+## Defaults and bounds
+
+| Param | Default | Max |
+|---|---|---|
+| `page` | `1` | n/a |
+| `limit` | `10` | `100` |
+
+Values outside the bounds are clamped silently — no `400`.
+
+## Sorting and filtering
+
+Most endpoints support `sort=field:asc|desc` and per-resource filters (`status`, `createdAfter`, etc.). See each endpoint's reference page for the full list.

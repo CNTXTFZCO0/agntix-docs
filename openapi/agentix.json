@@ -1,0 +1,30 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Agentix API",
+    "version": "0.0.0-bootstrap",
+    "description": "Placeholder spec. Run `pnpm sync:openapi` against a live gateway to replace this file with the real, internal-stripped specification."
+  },
+  "servers": [
+    { "url": "https://api.agntix.ai", "description": "Production" }
+  ],
+  "paths": {},
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key"
+      },
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "security": [
+    { "ApiKeyAuth": [] }
+  ],
+  "tags": []
+}

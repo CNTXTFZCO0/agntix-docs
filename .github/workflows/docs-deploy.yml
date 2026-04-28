@@ -1,0 +1,52 @@
+name: docs-deploy
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Pre-deploy validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile=false
+
+      - name: Run all checks (links + internal-leak lint)
+        run: pnpm check
+
+      - name: Sanity-check the committed OpenAPI spec
+        run: |
+          node -e "
+          const spec = require('./openapi/agentix.json');
+          const internal = /(\/admin\/|\/scheduler\/|\/internal\/|\/n8n\/|\/queue\/admin\/|\/users\/|\/whatsapp\/receive)/;
+          const leaked = Object.keys(spec.paths || {}).filter(p => internal.test(p));
+          if (leaked.length) {
+            console.error('FATAL — internal paths leaked into the published spec:', leaked);
+            process.exit(2);
+          }
+          console.log('Spec is clean —', Object.keys(spec.paths || {}).length, 'public paths');
+          "
+
+  notify-mintlify:
+    name: Mintlify auto-deploys on push to main
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - run: |
+          echo "Mintlify GitHub app deploys main → docs.agntix.ai automatically."
+          echo "Validation finished; deploy will follow as soon as the Mintlify app sees the push."

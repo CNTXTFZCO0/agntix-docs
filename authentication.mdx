@@ -1,0 +1,138 @@
+---
+title: "Authentication"
+description: "Use an organization API key for server-to-server calls or a Clerk JWT for end-user dashboards."
+---
+
+import ApiBaseUrl from "/snippets/api-base-url.mdx";
+
+The Agentix gateway supports **two** authentication methods. You'll use one or the other depending on
+*who* is making the call.
+
+| Method | Header | When to use |
+|---|---|---|
+| **API Key** | `x-api-key: pk_live_…` | Server-to-server, scripts, backend integrations |
+| **Bearer JWT** | `Authorization: Bearer <token>` | First-party browser apps that already have a Clerk session |
+
+<ApiBaseUrl />
+
+## Method 1 — API Keys (recommended)
+
+API keys are scoped to an **organization** and may be limited to specific features (read-only,
+voice-only, etc.) at creation time.
+
+### Create
+
+Open **Settings → [API Keys](https://app.agntix.ai/settings/api-keys)** in the dashboard and click
+**Create key**. Pick a name, the scopes you want, then copy the value. The key is shown **once**.
+
+You can also create keys programmatically:
+
+<CodeGroup>
+
+```bash cURL
+curl https://api.agntix.ai/v1/chat/api-keys \
+  -H "x-api-key: $AGNTIX_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{ "name": "CI/CD bot", "scopes": ["chat:write", "agents:read"] }'
+```
+
+```javascript Node
+const res = await fetch("https://api.agntix.ai/v1/chat/api-keys", {
+  method: "POST",
+  headers: {
+    "x-api-key": process.env.AGNTIX_API_KEY,
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({ name: "CI/CD bot", scopes: ["chat:write", "agents:read"] }),
+});
+const { key } = await res.json();
+```
+
+```python Python
+import os, httpx
+res = httpx.post(
+  "https://api.agntix.ai/v1/chat/api-keys",
+  headers={"x-api-key": os.environ["AGNTIX_API_KEY"]},
+  json={"name": "CI/CD bot", "scopes": ["chat:write", "agents:read"]},
+)
+print(res.json()["key"])
+```
+
+</CodeGroup>
+
+### Use
+
+Pass the key in the `x-api-key` header on every request:
+
+```bash
+curl https://api.agntix.ai/v1/chat/agents \
+  -H "x-api-key: $AGNTIX_API_KEY"
+```
+
+### Rotate
+
+Keys do not expire, but you can rotate at any time:
+
+1. Create a new key with the same scopes.
+2. Roll your service over to the new key.
+3. Delete the old key from the dashboard — the deletion is effective immediately.
+
+<Warning>
+  Never embed an API key in a browser, mobile app, or anywhere a customer can read it. Use a
+  short-lived **Bearer JWT** instead (below) or proxy through your own backend.
+</Warning>
+
+## Method 2 — Bearer JWT (Clerk session)
+
+If you're building a first-party dashboard and the user is already signed in with Clerk, send their
+session JWT instead of an API key:
+
+```bash
+curl https://api.agntix.ai/v1/chat/agents \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIs…"
+```
+
+The gateway validates the JWT against Clerk's JWKS, attaches the user's organization to the request
+context, and applies the same RBAC rules as if you'd called with an org API key.
+
+### Getting a JWT in the browser
+
+If you're using the official Clerk SDK:
+
+```javascript
+import { useAuth } from "@clerk/nextjs";
+
+const { getToken } = useAuth();
+const token = await getToken({ template: "agntix" }); // or your default template
+
+fetch("https://api.agntix.ai/v1/chat/agents", {
+  headers: { Authorization: `Bearer ${token}` },
+});
+```
+
+## Permissions & errors
+
+| Status | Meaning |
+|---|---|
+| `200`/`201` | Authenticated and authorized |
+| `401 Unauthorized` | Missing or invalid auth header |
+| `403 Forbidden` | Authenticated, but the key/JWT lacks the required permission |
+
+See the full list on the [error codes](/errors/error-codes) page.
+
+## Security best practices
+
+<CardGroup cols={2}>
+  <Card title="Rotate keys quarterly" icon="rotate">
+    Use the dashboard's bulk rotation tool, or wire CI/CD to do it on a schedule.
+  </Card>
+  <Card title="Scope down" icon="lock">
+    Issue a separate key per service with only the features it actually needs.
+  </Card>
+  <Card title="Use Bearer JWTs in the browser" icon="shield-halved">
+    Browser code never holds a long-lived API key.
+  </Card>
+  <Card title="Monitor usage" icon="chart-line">
+    The dashboard's API Keys page shows last-used timestamp per key — purge stale ones.
+  </Card>
+</CardGroup>

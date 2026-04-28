@@ -1,0 +1,59 @@
+---
+title: "Tools"
+description: "Give agents the ability to call your APIs or built-in functions during conversations."
+---
+
+import AuthCallout from "/snippets/auth-callout.mdx";
+
+<AuthCallout />
+
+Tools let an agent take actions during a conversation — query your CRM, schedule a meeting, or end a phone call. Agentix supports two kinds:
+
+| Type | Description |
+|---|---|
+| **API Tool** | An HTTP endpoint Agentix calls on the agent's behalf. Define the URL, method, headers, and JSON-Schema for the request body. |
+| **Function Tool** | A built-in capability like `_system__endPhoneCall` or `_system__transferPhoneCall`. |
+
+## Create an API tool
+
+```bash
+curl -X POST https://api.agntix.ai/v1/chat/tools \
+  -H "x-api-key: $AGNTIX_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "lookup_order_status",
+    "type": "API",
+    "config": {
+      "url": "https://api.example.com/orders/{orderId}",
+      "method": "GET",
+      "headers": { "Authorization": "Bearer $YOUR_API_TOKEN" },
+      "parameters": {
+        "type": "object",
+        "properties": { "orderId": { "type": "string" } },
+        "required": ["orderId"]
+      }
+    }
+  }'
+```
+
+## Attach to an agent
+
+```bash
+curl -X PATCH https://api.agntix.ai/v1/chat/agents/$AGENT_ID \
+  -H "x-api-key: $AGNTIX_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{ "config": { "toolsEnabled": true, "toolIds": ["tool_…"] } }'
+```
+
+## Tool execution flow
+
+When the LLM decides to call a tool:
+
+1. Agentix invokes the tool (HTTP request for API tools).
+2. The result is appended as a `TOOL` message in the session.
+3. The LLM is re-invoked with the result and produces the final assistant message.
+
+<Warning>
+  Tool calls have a 10-second default timeout. Slow tools degrade voice latency — keep them under 1
+  second for the best UX.
+</Warning>

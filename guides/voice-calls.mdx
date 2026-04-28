@@ -1,0 +1,45 @@
+---
+title: "Voice calls"
+description: "Place and receive AI voice calls with an Agentix agent over LiveKit, Twilio, or Telnyx."
+---
+
+import AuthCallout from "/snippets/auth-callout.mdx";
+
+<AuthCallout />
+
+Voice support is wired up in three steps: configure a voice profile on an agent, get a session token, and connect a client.
+
+## 1. Configure a voice profile
+
+```bash
+curl -X POST https://api.agntix.ai/v1/chat/voice/agents/$AGENT_ID \
+  -H "x-api-key: $AGNTIX_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{ "tts": { "provider": "elevenLabs", "voiceId": "..." }, "stt": { "provider": "deepgram", "model": "nova-3" } }'
+```
+
+## 2. Mint a session token
+
+```bash
+curl -X POST https://api.agntix.ai/v1/chat/voice/token \
+  -H "x-api-key: $AGNTIX_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{ "agentId": "agnt_…", "userId": "browser-anon-id" }'
+```
+
+The response includes a short-lived token your browser can use to join a LiveKit room.
+
+## 3. Connect with the LiveKit Web SDK
+
+```javascript
+import { Room } from 'livekit-client';
+
+const room = new Room();
+await room.connect('wss://livekit.agntix.ai', token);
+```
+
+The agent joins the room automatically and starts streaming TTS as soon as the user speaks.
+
+## Inbound phone calls
+
+For PSTN inbound calls, attach a phone number to the agent via the [Phone Numbers API](/api-reference/phone-numbers). Twilio/Telnyx webhook configuration is automatic.

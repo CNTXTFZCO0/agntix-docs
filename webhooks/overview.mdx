@@ -1,0 +1,41 @@
+---
+title: "Webhooks overview"
+description: "Get notified at-least-once when sessions, messages, or usage change."
+---
+
+import AuthCallout from "/snippets/auth-callout.mdx";
+
+<AuthCallout />
+
+Agentix uses [Svix](https://svix.com) for durable webhook delivery. Configure endpoints from the dashboard or programmatically via the [Webhooks API](/api-reference/webhooks).
+
+## Why webhooks?
+
+| Use case | Use this |
+|---|---|
+| Update a CRM when a call ends | **Webhooks** (durable) |
+| Live UI updates while a chat is happening | [SSE](/guides/streaming-events) (low-latency) |
+
+## Lifecycle
+
+1. **Create** an endpoint with a public HTTPS URL.
+2. **Subscribe** it to one or more event types — see [Events](/webhooks/events).
+3. **Receive** POST requests with a `svix-signature` header. **Verify the signature** before trusting the payload — see [Verifying signatures](/webhooks/verify-signatures).
+4. Reply with **2xx** within 15 seconds. Anything else triggers a retry with exponential backoff (24h max).
+
+## Payload shape
+
+```json
+{
+  "id": "evt_2dQp…",
+  "type": "session.ended",
+  "createdAt": "2026-04-28T11:42:11Z",
+  "data": {
+    "sessionId": "ses_…",
+    "agentId": "agnt_…",
+    "endedReason": "user_hangup"
+  }
+}
+```
+
+The full schema for each event lives in the [Events](/webhooks/events) page.

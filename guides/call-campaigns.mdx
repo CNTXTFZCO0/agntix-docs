@@ -1,0 +1,34 @@
+---
+title: "Call campaigns"
+description: "Place outbound voice calls in bulk against a contact list."
+---
+
+import AuthCallout from "/snippets/auth-callout.mdx";
+
+<AuthCallout />
+
+Call campaigns let you queue thousands of outbound voice calls against a list of contacts. Each call uses a configured agent, a phone number you own, and a scheduled run window.
+
+## Create a campaign
+
+```bash
+curl -X POST https://api.agntix.ai/v1/chat/call-campaigns \
+  -H "x-api-key: $AGNTIX_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Spring re-engagement",
+    "agentId": "agnt_…",
+    "phoneNumberId": "pn_…",
+    "contactIds": ["ct_…", "ct_…"],
+    "schedule": { "start": "2026-05-01T09:00:00Z" }
+  }'
+```
+
+## Monitor progress
+
+`GET /v1/chat/call-campaigns/{id}` returns aggregate counts (queued, in-flight, completed, failed). Subscribe to the [`session.updated`](/webhooks/events) webhook for per-call updates.
+
+<Warning>
+  Limits: 3 running campaigns per organization, 2,000 contacts per campaign, 3 retries per contact.
+  Adjust on a paid plan via support.
+</Warning>

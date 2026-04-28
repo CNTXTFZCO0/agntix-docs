@@ -1,0 +1,50 @@
+---
+title: "Rate limits"
+description: "Per-organization throttling, response headers, and how to handle 429s."
+---
+
+The Agentix gateway applies rate limits per organization. Defaults:
+
+| Tier | Window | Requests |
+|---|---|---|
+| Free | 60s | 100 |
+| Starter | 60s | 600 |
+| Growth | 60s | 3,000 |
+| Enterprise | custom | custom |
+
+## Response headers
+
+Every authenticated response includes:
+
+```http
+X-RateLimit-Limit: 600
+X-RateLimit-Remaining: 412
+X-RateLimit-Reset: 1714305600
+```
+
+When you exceed the limit:
+
+```http
+HTTP/1.1 429 Too Many Requests
+Retry-After: 17
+```
+
+## Handling 429
+
+Implement exponential backoff with jitter, capped at 60s:
+
+```javascript
+async function callWithBackoff(req, attempt = 0) {
+  const res = await fetch(req);
+  if (res.status !== 429) return res;
+  const retryAfter = Number(res.headers.get("Retry-After")) || 2 ** attempt;
+  const jitter = Math.random() * 1000;
+  await new Promise((r) => setTimeout(r, retryAfter * 1000 + jitter));
+  return callWithBackoff(req, Math.min(attempt + 1, 5));
+}
+```
+
+<Warning>
+  Streaming endpoints (SSE) are not rate-limited per request — they consume one connection slot from
+  your concurrent-stream quota instead.
+</Warning>

@@ -1,0 +1,8 @@
+All Agentix APIs are served from a single base URL behind the API gateway:
+
+```text
+https://api.agntix.ai
+```
+
+The gateway routes traffic to the appropriate upstream service based on the path prefix. As a customer
+you only ever talk to `api.agntix.ai` — internal service URLs are not exposed.

@@ -1,0 +1,34 @@
+---
+title: "Concepts"
+description: "Mental model: agents, sessions, messages, tools, knowledge stores, voice."
+---
+
+Agentix exposes a small set of objects that compose to cover almost every conversational AI use case.
+
+## Agent
+
+A long-lived configuration object: a system prompt, a model, optional tools, an optional knowledge store, and an optional voice profile. Agents belong to an **organization** and can be invoked from chat, voice, or WhatsApp.
+
+## Session
+
+A live or historical conversation between a user and an agent. Every message, tool call, and analytics record is anchored to a session. Sessions have a `state` (`OPEN`, `CLOSED`, `EXPIRED`) and a `platform` (`WEB`, `WHATSAPP`, `VOICE`).
+
+## Message
+
+A single turn in a session. Each message has a `role` (`USER`, `ASSISTANT`, `SYSTEM`, `TOOL`), text content, and optional tool calls.
+
+## Tool
+
+A capability the agent can invoke during a session. Two kinds: **API tools** (HTTP endpoints) and **function tools** (built-in capabilities like ending a call).
+
+## Knowledge Store
+
+A vector-indexed corpus the agent can retrieve from for RAG. You upload documents, Agentix chunks and embeds them, and the agent pulls the most relevant chunks at inference time.
+
+## Voice Profile
+
+A TTS/STT configuration attached to an agent for voice sessions. Multiple voice profiles per agent are supported (e.g. one per language).
+
+## API Key
+
+A long-lived secret scoped to your organization. Use it in the `x-api-key` header for server-to-server calls. See [Authentication](/authentication).

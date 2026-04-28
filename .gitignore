@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Mintlify build artifacts
+.mintlify/
+.mint/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Editor
+.vscode/
+.idea/
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+
+# Generated artifacts (kept under version control on purpose are NOT here)
+# - openapi/agentix.json IS committed so the docs build is hermetic

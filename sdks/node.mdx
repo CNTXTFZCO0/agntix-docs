@@ -1,0 +1,78 @@
+---
+title: "Node.js"
+description: "Minimal `fetch`-based client. No SDK install required."
+---
+
+## Setup
+
+```bash
+export AGNTIX_API_KEY=pk_live_xxxxxxxxxxxxxxxx
+```
+
+## Tiny client
+
+```javascript
+const BASE = "https://api.agntix.ai";
+
+async function agntix(path, init = {}) {
+  const res = await fetch(`${BASE}${path}`, {
+    ...init,
+    headers: {
+      "x-api-key": process.env.AGNTIX_API_KEY,
+      "Content-Type": "application/json",
+      ...init.headers,
+    },
+  });
+  if (!res.ok) {
+    throw Object.assign(new Error(`Agentix ${res.status}`), {
+      status: res.status,
+      body: await res.json().catch(() => null),
+    });
+  }
+  return res.json();
+}
+```
+
+## Examples
+
+```javascript
+const models = await agntix("/v1/chat/models");
+
+const agent = await agntix("/v1/chat/agents", {
+  method: "POST",
+  body: JSON.stringify({
+    name: "Support bot",
+    modelId: "gpt-4o-mini",
+    systemPrompt: "You are helpful.",
+  }),
+});
+
+const session = await agntix("/v1/chat/chat/sessions", {
+  method: "POST",
+  body: JSON.stringify({ agentId: agent.id }),
+});
+```
+
+## Streaming with `EventSource`
+
+```javascript
+import { EventSource } from "eventsource";
+
+const es = new EventSource(`${BASE}/v1/chat/events/stream`, {
+  fetch: (url, init) =>
+    fetch(url, {
+      ...init,
+      headers: { ...init.headers, "x-api-key": process.env.AGNTIX_API_KEY },
+    }),
+});
+
+es.addEventListener("message.added", (e) => console.log(JSON.parse(e.data)));
+```
+
+## TypeScript
+
+We don't ship typings yet — for now you can generate them from the OpenAPI spec:
+
+```bash
+npx openapi-typescript https://api.agntix.ai/docs/json -o agntix.d.ts
+```

@@ -1,0 +1,46 @@
+---
+title: "Streaming events (SSE)"
+description: "Subscribe to real-time session, message, and usage events over Server-Sent Events."
+---
+
+import AuthCallout from "/snippets/auth-callout.mdx";
+
+<AuthCallout />
+
+Agentix exposes a single Server-Sent Events stream per organization at `GET /v1/chat/events/stream`. Use it to update dashboards, push notifications, or trigger downstream automation.
+
+## Connect
+
+```javascript
+const es = new EventSource(
+  "https://api.agntix.ai/v1/chat/events/stream",
+  { withCredentials: true } // or use ?token=… for environments without cookie support
+);
+
+es.addEventListener("message.added", (e) => {
+  const payload = JSON.parse(e.data);
+  console.log("new message in", payload.sessionId, payload);
+});
+```
+
+## Event types
+
+| Event | Triggered when |
+|---|---|
+| `session.started` | A new chat or voice session is created |
+| `session.updated` | Session state, agent assignment, or analytics change |
+| `session.ended` | Session is closed (manually, expired, or call ended) |
+| `message.added` | A new message is added to a session |
+| `usage.updated` | Usage metrics for the org change |
+| `subscription.updated` | Plan change, cancel, or resume |
+| `knowledge_store.updated` | A knowledge store document finishes processing |
+| `heartbeat` | Sent every 30s; use to detect a dead connection |
+
+## Reconnecting
+
+The browser's `EventSource` reconnects automatically with the `Last-Event-ID` header. Keep your client side-effect-free with respect to event order — at least one delivery is guaranteed, ordering is not.
+
+<Tip>
+  Looking for at-least-once delivery with replay? Subscribe via [Webhooks](/webhooks/overview) instead.
+  SSE is fire-and-forget; webhooks are durable.
+</Tip>

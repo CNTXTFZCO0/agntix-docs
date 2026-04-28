@@ -1,0 +1,32 @@
+---
+title: "Knowledge stores"
+description: "Upload, manage, and query the documents your agents retrieve from."
+---
+
+A knowledge store is a vector-indexed corpus tied to your organization. One agent can attach to one knowledge store; many agents can share the same store.
+
+## Lifecycle
+
+1. **Create** — `POST /v1/chat/knowledge-store` with a name and description.
+2. **Upload** — Push PDFs, Markdown, or HTML. Agentix chunks (~1k tokens), embeds (Cohere), and indexes (Qdrant).
+3. **Process** — Documents are processed asynchronously. Subscribe to the [`knowledge_store.updated`](/webhooks/events) webhook to know when a doc is ready.
+4. **Attach** — Set `config.knowledgeStoreId` on an agent.
+
+See the [API reference](/api-reference/knowledge-store) for the full schema.
+
+## Best practices
+
+<CardGroup cols={2}>
+  <Card title="Keep stores narrow" icon="layer-group">
+    One store per topic gives much better retrieval than one giant store with everything.
+  </Card>
+  <Card title="Refresh on a schedule" icon="rotate">
+    Re-upload changed documents weekly; old chunks are replaced atomically.
+  </Card>
+  <Card title="Enable reranking" icon="wand-magic-sparkles">
+    Cohere reranking adds ~150ms but cuts hallucinations dramatically.
+  </Card>
+  <Card title="Cite sources in prompts" icon="quote-left">
+    Tell the agent in its system prompt to cite chunk titles to build user trust.
+  </Card>
+</CardGroup>

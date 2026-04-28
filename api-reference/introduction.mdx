@@ -1,0 +1,44 @@
+---
+title: "API Reference"
+description: "The auto-generated reference for every public Agentix endpoint."
+---
+
+import ApiBaseUrl from "/snippets/api-base-url.mdx";
+
+The reference pages on this tab are generated from our live OpenAPI specification. Each page shows
+the request/response schema, an interactive **Try it** playground, and copy-paste examples in cURL,
+Node.js, and Python.
+
+<ApiBaseUrl />
+
+## How it stays in sync
+
+The spec at [`/openapi/agentix.json`](/openapi/agentix.json) is regenerated nightly from the gateway
+via [`scripts/sync-openapi.ts`](https://github.com/agntix/agntix-docs-portal/blob/main/scripts/sync-openapi.ts).
+Internal-only endpoints (admin, scheduler, billing, infrastructure) are filtered out at three layers
+before they could ever appear here. See the [migration guide](https://github.com/agntix/agntix-docs-portal/blob/main/MIGRATION_GUIDE.md)
+for the full security model.
+
+## Conventions
+
+| Convention | Detail |
+|---|---|
+| **Base URL** | `https://api.agntix.ai` |
+| **Versioning** | Path-based (`/v1/…`, `/v2/…`). New majors run side-by-side for ≥ 6 months |
+| **Auth** | `x-api-key: pk_live_…` or `Authorization: Bearer <jwt>` ([details](/authentication)) |
+| **Encoding** | UTF-8 JSON in and out, unless explicitly multipart |
+| **Timestamps** | RFC 3339 / ISO 8601 in UTC (e.g. `2026-04-28T11:42:11Z`) |
+| **IDs** | Prefixed (`agnt_…`, `ses_…`, `msg_…`) — opaque, never parse them |
+| **Pagination** | `?page=N&limit=N`, max `limit=100` ([details](/guides/pagination)) |
+| **Errors** | Consistent envelope ([details](/errors/error-codes)) |
+
+## Use the playground
+
+Click any endpoint in the sidebar, fill in the request fields, and hit **Send**. The playground
+authenticates with the API key you set at the top right of the page (stored in browser local
+storage — never sent to us).
+
+## Webhooks
+
+Webhooks are documented under the [Webhooks](/webhooks/overview) tab, not here. The reference covers
+synchronous request/response endpoints only.

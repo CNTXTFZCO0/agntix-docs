@@ -1,0 +1,27 @@
+---
+title: "SDKs"
+description: "Official client libraries and copy-paste examples in cURL, Node.js, and Python."
+---
+
+We currently ship language-agnostic examples plus thin wrappers around `fetch`/`requests`. Native SDKs (Node, Python, Go) are on the roadmap — track [Changelog](/changelog) for releases.
+
+<CardGroup cols={3}>
+  <Card title="cURL" icon="terminal" href="/sdks/curl">
+    Copy-paste-ready snippets for every endpoint.
+  </Card>
+  <Card title="Node.js" icon="js" href="/sdks/node">
+    `fetch`-based client; works in Node 20+, Bun, Deno, and the browser.
+  </Card>
+  <Card title="Python" icon="python" href="/sdks/python">
+    Async `httpx` client with typed responses via `pydantic`.
+  </Card>
+</CardGroup>
+
+## Conventions
+
+Every example below assumes:
+
+```bash
+export AGNTIX_API_KEY=pk_live_xxxxxxxxxxxxxxxx
+export AGNTIX_BASE_URL=https://api.agntix.ai
+```

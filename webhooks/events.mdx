@@ -1,0 +1,165 @@
+---
+title: "Event types"
+description: "Reference for every webhook event Agentix can deliver, with payload schemas and example bodies."
+---
+
+import AuthCallout from "/snippets/auth-callout.mdx";
+
+<AuthCallout />
+
+Agentix delivers webhooks via [Svix](https://svix.com). Configure endpoints from the dashboard or via the [Webhooks API](/api-reference/webhooks). All payloads share an envelope:
+
+```json
+{
+  "id": "evt_2dQp…",
+  "type": "session.ended",
+  "createdAt": "2026-04-28T11:42:11Z",
+  "data": { /* event-specific payload */ }
+}
+```
+
+`id` is a stable, monotonically-increasing identifier — use it for idempotency.
+
+---
+
+## `session.started`
+
+Fired when a chat or voice session is created.
+
+<ResponseField name="data.sessionId" type="string">The session id (`ses_…`).</ResponseField>
+<ResponseField name="data.agentId" type="string">The agent id (`agnt_…`).</ResponseField>
+<ResponseField name="data.userId" type="string">The customer-supplied user id.</ResponseField>
+<ResponseField name="data.platform" type="enum">`WEB`, `WHATSAPP`, `VOICE`.</ResponseField>
+<ResponseField name="data.startedAt" type="string">RFC 3339 UTC timestamp.</ResponseField>
+
+```json
+{
+  "id": "evt_2dQp…",
+  "type": "session.started",
+  "createdAt": "2026-04-28T11:42:11Z",
+  "data": {
+    "sessionId": "ses_01J2K…",
+    "agentId": "agnt_01J0X…",
+    "userId": "customer-123",
+    "platform": "WEB",
+    "startedAt": "2026-04-28T11:42:11Z"
+  }
+}
+```
+
+---
+
+## `session.updated`
+
+Any change to a session's state, agent assignment, intelligence summary, or analytics record.
+
+<ResponseField name="data.sessionId" type="string" />
+<ResponseField name="data.changedFields" type="string[]">Which fields changed (e.g. `["state", "intelligence"]`).</ResponseField>
+<ResponseField name="data.state" type="enum">`OPEN`, `CLOSED`, `EXPIRED`.</ResponseField>
+
+```json
+{
+  "id": "evt_2dQq…",
+  "type": "session.updated",
+  "createdAt": "2026-04-28T11:43:00Z",
+  "data": {
+    "sessionId": "ses_01J2K…",
+    "changedFields": ["intelligence"],
+    "state": "OPEN"
+  }
+}
+```
+
+---
+
+## `session.ended`
+
+Fired once when a session closes (manually, via timeout, or on call hangup).
+
+<ResponseField name="data.sessionId" type="string" />
+<ResponseField name="data.endedReason" type="enum">
+  `user_hangup`, `agent_hangup`, `auto_close`, `max_duration_reached`, `error`.
+</ResponseField>
+<ResponseField name="data.durationMs" type="number">Total session duration in milliseconds.</ResponseField>
+<ResponseField name="data.summary" type="object">Optional intelligence summary if generated.</ResponseField>
+
+```json
+{
+  "id": "evt_2dQr…",
+  "type": "session.ended",
+  "createdAt": "2026-04-28T11:48:21Z",
+  "data": {
+    "sessionId": "ses_01J2K…",
+    "endedReason": "user_hangup",
+    "durationMs": 372100
+  }
+}
+```
+
+---
+
+## `message.added`
+
+A user, assistant, or tool message was appended to a session.
+
+<ResponseField name="data.sessionId" type="string" />
+<ResponseField name="data.messageId" type="string">The message id (`msg_…`).</ResponseField>
+<ResponseField name="data.role" type="enum">`USER`, `ASSISTANT`, `TOOL`, `SYSTEM`.</ResponseField>
+<ResponseField name="data.content" type="string">The text content (may be empty for tool calls).</ResponseField>
+<ResponseField name="data.toolCall" type="object">Present only for `TOOL` role.</ResponseField>
+
+```json
+{
+  "id": "evt_2dQs…",
+  "type": "message.added",
+  "createdAt": "2026-04-28T11:42:13Z",
+  "data": {
+    "sessionId": "ses_01J2K…",
+    "messageId": "msg_01J2L…",
+    "role": "ASSISTANT",
+    "content": "Your order 1234 shipped this morning."
+  }
+}
+```
+
+---
+
+## `usage.updated`
+
+Aggregate usage metrics for the org changed (rolled up every 60s).
+
+<ResponseField name="data.period" type="object">`{ "start": ISO, "end": ISO }`.</ResponseField>
+<ResponseField name="data.metrics" type="object">
+  `{ "chat_messages": number, "voice_seconds": number, "knowledge_chunks": number }`.
+</ResponseField>
+
+---
+
+## `subscription.updated`
+
+Plan change, payment method update, cancel, or resume.
+
+<ResponseField name="data.subscriptionId" type="string" />
+<ResponseField name="data.status" type="enum">`active`, `past_due`, `canceled`, `paused`.</ResponseField>
+<ResponseField name="data.currentPlan" type="string">e.g. `growth`.</ResponseField>
+
+---
+
+## `knowledge_store.updated`
+
+A document finished processing (chunked + embedded + indexed).
+
+<ResponseField name="data.knowledgeStoreId" type="string" />
+<ResponseField name="data.documentId" type="string" />
+<ResponseField name="data.status" type="enum">`UPSERTED`, `FAILED`.</ResponseField>
+
+---
+
+## Delivery semantics
+
+- **At-least-once.** Always idempotent on `id`.
+- **Order is not guaranteed.** Use `createdAt` if you need to sort.
+- **Retries:** exponential backoff up to 24h. After 24h the event is dead-lettered (visible in the dashboard).
+- **Timeout:** your endpoint must respond `2xx` within **15 seconds**.
+
+See [Verifying signatures](/webhooks/verify-signatures) for how to authenticate incoming requests.

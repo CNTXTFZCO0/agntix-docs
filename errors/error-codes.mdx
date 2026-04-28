@@ -1,0 +1,108 @@
+---
+title: "Error codes"
+description: "Every error you can get from the Agentix API and how to handle each one."
+---
+
+Every Agentix endpoint returns a consistent error envelope:
+
+```json
+{
+  "error": {
+    "code": "SESSION_NOT_FOUND",
+    "message": "The session you requested does not exist or has expired.",
+    "requestId": "req_01J2K…"
+  }
+}
+```
+
+`requestId` lets support trace a specific call — include it in any bug report.
+
+## HTTP status codes
+
+| Status | Meaning | Typical cause |
+|---|---|---|
+| `200` / `201` | Success | — |
+| `204` | Success, no body | DELETE, idempotent updates |
+| `400` Bad Request | Malformed input | Missing required field, bad JSON |
+| `401` Unauthorized | Missing or invalid auth | No `x-api-key`, expired JWT |
+| `403` Forbidden | Auth OK, permission denied | Key lacks the required scope |
+| `404` Not Found | Resource missing | Wrong id, deleted resource |
+| `409` Conflict | Idempotency or uniqueness violation | Duplicate name, concurrent modification |
+| `422` Unprocessable | Validation failed | Tool config invalid, model not supported for org |
+| `429` Too Many Requests | Rate limit hit | See [Rate limits](/guides/rate-limits) |
+| `500` Internal Server Error | Bug on our side | Open a [support ticket](mailto:support@agntix.ai) with the `requestId` |
+| `502` / `503` / `504` | Upstream / overload | Retry with backoff |
+
+## Application error codes
+
+These appear in `error.code` and are stable — safe to switch on in client code.
+
+### Sessions
+
+| Code | Meaning | Fix |
+|---|---|---|
+| `SESSION_NOT_FOUND` | The session id is unknown or expired | Verify the id; sessions auto-expire after the configured idle timeout |
+| `SESSION_EXPIRED` | The session is past its inactivity window | Open a new session |
+| `SESSION_CREATION_ERROR` | Could not allocate a session | Often a downstream model availability issue — retry |
+| `INVALID_SESSION` | The session is not valid for the requested operation | Make sure the session is in `OPEN` state |
+| `MESSAGES_HISTORY_ERROR` | Could not fetch message history | Retry; persistent failures are bugs |
+
+### Models & tools
+
+| Code | Meaning | Fix |
+|---|---|---|
+| `MODELS_NOT_FOUND` | Requested model is not enabled for your org | Pick a different model from `GET /v1/chat/models` |
+| `TOOLS_NOT_FOUND` | One of the tool ids on the agent is missing | Re-attach a valid tool |
+| `CONFIG_NOT_FOUND` | Agent config is missing required fields | Re-PATCH the agent with a complete config |
+
+### Auth & permissions
+
+| Code | Meaning | Fix |
+|---|---|---|
+| `UNAUTHORIZED` | Missing or invalid auth header | See [Authentication](/authentication) |
+
+### Generic
+
+| Code | Meaning | Fix |
+|---|---|---|
+| `ABORT_ERROR` | The request was aborted (client disconnected) | No fix needed — informational |
+| `GENERIC_ERROR` | Unclassified server-side error | Retry; if it persists, file a ticket with the `requestId` |
+
+## Handling errors well
+
+```javascript
+async function call(path, init) {
+  const res = await fetch(`https://api.agntix.ai${path}`, init);
+  if (res.ok) return res.json();
+
+  const body = await res.json().catch(() => ({}));
+  const code = body.error?.code ?? "UNKNOWN";
+
+  if (res.status === 429) {
+    const retryAfter = Number(res.headers.get("Retry-After")) || 1;
+    await new Promise((r) => setTimeout(r, retryAfter * 1000));
+    return call(path, init);
+  }
+
+  if (res.status === 401) {
+    throw new Error("Auth failed — refresh your API key or JWT");
+  }
+
+  throw Object.assign(new Error(body.error?.message ?? `${res.status}`), {
+    status: res.status,
+    code,
+    requestId: body.error?.requestId,
+  });
+}
+```
+
+<Tip>
+  Always log `requestId` along with the error. It's the single most useful field for debugging.
+</Tip>
+
+## When to retry
+
+| Status | Retry? | Strategy |
+|---|---|---|
+| `408`, `429`, `500`, `502`, `503`, `504` | Yes | Exponential backoff + jitter, max 5 attempts |
+| `400`, `401`, `403`, `404`, `409`, `422` | No | Fix the request and try again |

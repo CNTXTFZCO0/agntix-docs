@@ -1,0 +1,203 @@
+---
+title: "Build your first agent"
+description: "End-to-end walkthrough: configure an agent, send messages, stream the response, then add a tool."
+---
+
+import AuthCallout from "/snippets/auth-callout.mdx";
+
+By the end of this guide you'll have a working agent that:
+
+1. Holds a conversation grounded in a system prompt.
+2. Streams its response token-by-token.
+3. Calls a tool (your own HTTP endpoint) when asked.
+
+It assumes you've already finished the [Quickstart](/quickstart).
+
+<AuthCallout />
+
+## 1. Pick a model
+
+`GET /v1/chat/models` lists everything your org can use today. For most chat use cases, start with
+`gpt-4o-mini` — fast, cheap, capable.
+
+```bash
+curl https://api.agntix.ai/v1/chat/models?type=text-to-text \
+  -H "x-api-key: $AGNTIX_API_KEY"
+```
+
+## 2. Create the agent
+
+System prompts matter more than any other knob. Be explicit about persona, tone, and what *not* to do.
+
+```bash
+curl https://api.agntix.ai/v1/chat/agents \
+  -H "x-api-key: $AGNTIX_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Order Status Bot",
+    "modelId": "gpt-4o-mini",
+    "systemPrompt": "You help customers track their orders. Be concise and friendly. If the user asks anything unrelated to orders, politely redirect them.",
+    "config": {
+      "temperature": 0.3,
+      "maxOutputTokens": 200
+    }
+  }'
+```
+
+Save the returned `id` as `AGENT_ID`.
+
+## 3. Open a session
+
+A session is the long-lived container for a single user conversation. It tracks message history,
+analytics, and tool calls.
+
+```bash
+SESSION=$(curl -s https://api.agntix.ai/v1/chat/chat/sessions \
+  -H "x-api-key: $AGNTIX_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d "{\"agentId\": \"$AGENT_ID\", \"userId\": \"customer-123\"}" | jq -r .id)
+```
+
+The `userId` is yours to choose — Agentix uses it for analytics and message grouping. It does not
+need to map to a user in our system.
+
+## 4. Send a non-streaming message
+
+For background jobs or chatbots that don't need to stream:
+
+```bash
+curl https://api.agntix.ai/v1/chat/chat/sessions/$SESSION/messages \
+  -H "x-api-key: $AGNTIX_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"content": "Where is my order #1234?"}'
+```
+
+The response is a complete `MessageResponse` object including the assistant's reply.
+
+## 5. Stream a message
+
+For UIs, switch to streaming. The `stream=true` query param flips the response to text/event-stream:
+
+<CodeGroup>
+
+```bash cURL
+curl -N "https://api.agntix.ai/v1/chat/chat/sessions/$SESSION/messages?stream=true" \
+  -H "x-api-key: $AGNTIX_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Accept: text/event-stream" \
+  -d '{"content": "Where is my order #1234?"}'
+```
+
+```javascript Node
+const res = await fetch(
+  `https://api.agntix.ai/v1/chat/chat/sessions/${SESSION}/messages?stream=true`,
+  {
+    method: "POST",
+    headers: {
+      "x-api-key": process.env.AGNTIX_API_KEY,
+      "Content-Type": "application/json",
+      Accept: "text/event-stream",
+    },
+    body: JSON.stringify({ content: "Where is my order #1234?" }),
+  }
+);
+
+const reader = res.body.getReader();
+const decoder = new TextDecoder();
+while (true) {
+  const { value, done } = await reader.read();
+  if (done) break;
+  process.stdout.write(decoder.decode(value));
+}
+```
+
+```python Python
+with httpx.stream(
+    "POST",
+    f"https://api.agntix.ai/v1/chat/chat/sessions/{SESSION}/messages?stream=true",
+    headers={
+        "x-api-key": os.environ["AGNTIX_API_KEY"],
+        "Accept": "text/event-stream",
+    },
+    json={"content": "Where is my order #1234?"},
+) as r:
+    for line in r.iter_lines():
+        print(line)
+```
+
+</CodeGroup>
+
+You'll receive `delta` events with token chunks, then a `done` event when the assistant finishes.
+
+## 6. Add a tool
+
+Now make the agent actually look up real orders. We'll register an API tool that hits your backend:
+
+```bash
+TOOL=$(curl -s https://api.agntix.ai/v1/chat/tools \
+  -H "x-api-key: $AGNTIX_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "lookup_order_status",
+    "description": "Look up the current status of an order by its number.",
+    "type": "API",
+    "config": {
+      "url": "https://your-backend.example.com/orders/{orderNumber}/status",
+      "method": "GET",
+      "headers": { "Authorization": "Bearer YOUR_BACKEND_TOKEN" },
+      "parameters": {
+        "type": "object",
+        "properties": { "orderNumber": { "type": "string", "description": "The order number to look up." } },
+        "required": ["orderNumber"]
+      }
+    }
+  }' | jq -r .id)
+```
+
+Attach it to the agent:
+
+```bash
+curl -X PATCH https://api.agntix.ai/v1/chat/agents/$AGENT_ID \
+  -H "x-api-key: $AGNTIX_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d "{\"config\": {\"toolsEnabled\": true, \"toolIds\": [\"$TOOL\"]}}"
+```
+
+## 7. Verify the tool fires
+
+Send a message that should trigger the tool:
+
+```bash
+curl https://api.agntix.ai/v1/chat/chat/sessions/$SESSION/messages \
+  -H "x-api-key: $AGNTIX_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"content": "What is the status of order 1234?"}'
+```
+
+In the response you'll see a `TOOL` message with the call payload, then the assistant's final reply
+that incorporates the tool's result.
+
+You can also subscribe to [streaming events](/guides/streaming-events) to watch the tool calls in
+real time:
+
+```text
+event: tool_call
+data: { "toolName": "lookup_order_status", "args": { "orderNumber": "1234" } }
+```
+
+## What's next
+
+<CardGroup cols={2}>
+  <Card title="Add RAG" icon="database" href="/guides/chat-with-rag">
+    Ground answers in your own documents.
+  </Card>
+  <Card title="Add voice" icon="phone" href="/guides/voice-calls">
+    Same agent, now speaking — over the browser or PSTN.
+  </Card>
+  <Card title="Subscribe to webhooks" icon="bolt" href="/webhooks/overview">
+    Push session lifecycle events to your back-office.
+  </Card>
+  <Card title="Production checklist" icon="circle-check" href="/guides/rate-limits">
+    Rate limits, retries, error handling.
+  </Card>
+</CardGroup>

@@ -1,0 +1,41 @@
+---
+title: "Chat with RAG"
+description: "Attach a knowledge store to an agent and answer questions from your own documents."
+---
+
+import AuthCallout from "/snippets/auth-callout.mdx";
+
+<AuthCallout />
+
+This guide assumes you have already built and tested a basic agent in [Build your first agent](/guides/build-your-first-agent).
+
+## 1. Create a knowledge store
+
+```bash
+curl -X POST https://api.agntix.ai/v1/chat/knowledge-store \
+  -H "x-api-key: $AGNTIX_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{ "name": "Help Center", "description": "Customer-facing help center articles" }'
+```
+
+## 2. Upload documents
+
+Upload PDFs, Markdown, or HTML; Agentix chunks, embeds, and indexes them. See the [Knowledge Stores API reference](/api-reference/knowledge-store) for the upload endpoint and supported MIME types.
+
+## 3. Attach the store to an agent
+
+```bash
+curl -X PATCH https://api.agntix.ai/v1/chat/agents/$AGENT_ID \
+  -H "x-api-key: $AGNTIX_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{ "config": { "ragEnabled": true, "knowledgeStoreId": "ks_…" } }'
+```
+
+## 4. Ask a question
+
+Send a message in a session created against the agent. The agent will retrieve top-K chunks from the knowledge store, inject them into the prompt, and answer with citations.
+
+<Tip>
+  Tune retrieval quality by enabling Cohere reranking on the agent's config. The default top-K is 2;
+  raise it to 4–6 for sparse corpora.
+</Tip>

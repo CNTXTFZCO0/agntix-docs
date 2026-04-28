@@ -1,0 +1,60 @@
+---
+title: "Verify signatures"
+description: "Use the Svix-compatible HMAC signature to verify webhook authenticity."
+---
+
+Every webhook request includes three Svix headers:
+
+```http
+svix-id: msg_2dQp…
+svix-timestamp: 1714305600
+svix-signature: v1,K8vDqK5g…
+```
+
+## Verify in Node
+
+```javascript
+import { Webhook } from "svix";
+
+const wh = new Webhook(process.env.AGNTIX_WEBHOOK_SECRET);
+
+app.post("/webhooks/agntix", express.raw({ type: "application/json" }), (req, res) => {
+  try {
+    const payload = wh.verify(req.body, {
+      "svix-id": req.headers["svix-id"],
+      "svix-timestamp": req.headers["svix-timestamp"],
+      "svix-signature": req.headers["svix-signature"],
+    });
+    handleEvent(JSON.parse(payload.toString()));
+    res.sendStatus(200);
+  } catch (err) {
+    res.sendStatus(400);
+  }
+});
+```
+
+## Verify in Python
+
+```python
+from svix.webhooks import Webhook, WebhookVerificationError
+
+wh = Webhook(os.environ["AGNTIX_WEBHOOK_SECRET"])
+
+try:
+    payload = wh.verify(request.body, {
+        "svix-id": request.headers["svix-id"],
+        "svix-timestamp": request.headers["svix-timestamp"],
+        "svix-signature": request.headers["svix-signature"],
+    })
+except WebhookVerificationError:
+    return Response(status=400)
+```
+
+## Replay protection
+
+The `svix-timestamp` is enforced ±5 minutes. Old replays are rejected automatically.
+
+<Warning>
+  Always verify on the **raw request body**, not a parsed JSON object. Any reformatting will break
+  the signature.
+</Warning>

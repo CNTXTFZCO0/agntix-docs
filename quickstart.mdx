@@ -1,0 +1,201 @@
+---
+title: "Quickstart"
+description: "From signup to a working AI agent in under five minutes."
+---
+
+import ApiBaseUrl from "/snippets/api-base-url.mdx";
+
+This page walks you through the **golden path** — every step takes ≤ 60 seconds.
+
+<ApiBaseUrl />
+
+<Steps>
+  <Step title="Create an account">
+    Sign up at [app.agntix.ai/signup](https://app.agntix.ai/signup). The default org plan includes
+    enough free quota to finish this quickstart.
+  </Step>
+
+  <Step title="Get your API key">
+    Open **Settings → [API Keys](https://app.agntix.ai/settings/api-keys)**, click **Create key**,
+    pick **Read & write**, and copy the value. It looks like:
+
+    ```text
+    pk_live_xxxxxxxxxxxxxxxxxxxxxxxx
+    ```
+
+    Set it in your shell:
+
+    ```bash
+    export AGNTIX_API_KEY=pk_live_xxxxxxxxxxxxxxxxxxxxxxxx
+    ```
+
+    <Warning>
+      Keys grant full access to your organization. Store them in a secret manager — never commit one
+      to git.
+    </Warning>
+  </Step>
+
+  <Step title="Make your first authenticated call">
+    `GET /v1/chat/models` lists every model your org can use. It needs auth but no body — perfect
+    for a smoke test.
+
+    <CodeGroup>
+
+    ```bash cURL
+    curl https://api.agntix.ai/v1/chat/models \
+      -H "x-api-key: $AGNTIX_API_KEY"
+    ```
+
+    ```javascript Node
+    const res = await fetch("https://api.agntix.ai/v1/chat/models", {
+      headers: { "x-api-key": process.env.AGNTIX_API_KEY },
+    });
+    const { data } = await res.json();
+    console.log(data.length, "models available");
+    ```
+
+    ```python Python
+    import os, httpx
+    res = httpx.get(
+      "https://api.agntix.ai/v1/chat/models",
+      headers={"x-api-key": os.environ["AGNTIX_API_KEY"]},
+    )
+    print(len(res.json()["data"]), "models available")
+    ```
+
+    </CodeGroup>
+
+    A `200 OK` here means your key works.
+  </Step>
+
+  <Step title="Create an agent">
+    The minimum agent needs a name, a model, and a system prompt.
+
+    <CodeGroup>
+
+    ```bash cURL
+    curl https://api.agntix.ai/v1/chat/agents \
+      -H "x-api-key: $AGNTIX_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "name": "Quickstart bot",
+        "modelId": "gpt-4o-mini",
+        "systemPrompt": "You are a friendly assistant. Be concise."
+      }'
+    ```
+
+    ```javascript Node
+    const res = await fetch("https://api.agntix.ai/v1/chat/agents", {
+      method: "POST",
+      headers: {
+        "x-api-key": process.env.AGNTIX_API_KEY,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: "Quickstart bot",
+        modelId: "gpt-4o-mini",
+        systemPrompt: "You are a friendly assistant. Be concise.",
+      }),
+    });
+    const agent = await res.json();
+    console.log(agent.id);
+    ```
+
+    ```python Python
+    res = httpx.post(
+      "https://api.agntix.ai/v1/chat/agents",
+      headers={"x-api-key": os.environ["AGNTIX_API_KEY"]},
+      json={
+        "name": "Quickstart bot",
+        "modelId": "gpt-4o-mini",
+        "systemPrompt": "You are a friendly assistant. Be concise.",
+      },
+    )
+    print(res.json()["id"])
+    ```
+
+    </CodeGroup>
+
+    Save the `id` from the response — you'll need it next.
+  </Step>
+
+  <Step title="Send a message">
+    Open a session against the agent, then post a user message. The response includes the assistant's
+    reply.
+
+    <CodeGroup>
+
+    ```bash cURL
+    SESSION=$(curl -s https://api.agntix.ai/v1/chat/chat/sessions \
+      -H "x-api-key: $AGNTIX_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d "{\"agentId\": \"$AGENT_ID\"}" | jq -r .id)
+
+    curl https://api.agntix.ai/v1/chat/chat/sessions/$SESSION/messages \
+      -H "x-api-key: $AGNTIX_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{"content": "Say hello in three words."}'
+    ```
+
+    ```javascript Node
+    const session = await (await fetch("https://api.agntix.ai/v1/chat/chat/sessions", {
+      method: "POST",
+      headers: { "x-api-key": process.env.AGNTIX_API_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify({ agentId }),
+    })).json();
+
+    const reply = await (await fetch(
+      `https://api.agntix.ai/v1/chat/chat/sessions/${session.id}/messages`,
+      {
+        method: "POST",
+        headers: { "x-api-key": process.env.AGNTIX_API_KEY, "Content-Type": "application/json" },
+        body: JSON.stringify({ content: "Say hello in three words." }),
+      },
+    )).json();
+
+    console.log(reply);
+    ```
+
+    ```python Python
+    session = httpx.post(
+      "https://api.agntix.ai/v1/chat/chat/sessions",
+      headers={"x-api-key": os.environ["AGNTIX_API_KEY"]},
+      json={"agentId": agent_id},
+    ).json()
+
+    reply = httpx.post(
+      f"https://api.agntix.ai/v1/chat/chat/sessions/{session['id']}/messages",
+      headers={"x-api-key": os.environ["AGNTIX_API_KEY"]},
+      json={"content": "Say hello in three words."},
+    ).json()
+    print(reply)
+    ```
+
+    </CodeGroup>
+  </Step>
+</Steps>
+
+## You're done
+
+You now have:
+
+- An agent your team can iterate on from the dashboard or the API.
+- A session with a real LLM-generated reply.
+- A working API key suitable for your local dev environment.
+
+## What's next
+
+<CardGroup cols={2}>
+  <Card title="Add a knowledge store (RAG)" icon="database" href="/guides/chat-with-rag">
+    Make the agent answer from your own documents instead of generic web knowledge.
+  </Card>
+  <Card title="Wire up voice" icon="phone" href="/guides/voice-calls">
+    Same agent, now speaking — over the browser or PSTN phone calls.
+  </Card>
+  <Card title="Subscribe to webhooks" icon="bolt" href="/webhooks/overview">
+    Push session lifecycle events to your back-office.
+  </Card>
+  <Card title="Production checklist" icon="circle-check" href="/guides/rate-limits">
+    Rate limits, retries, error handling, and SLOs.
+  </Card>
+</CardGroup>
