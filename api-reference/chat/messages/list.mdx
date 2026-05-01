@@ -1,0 +1,75 @@
+---
+title: "List Messages"
+openapi: "GET /v1/chat/chat/sessions/{sessionId}/messages"
+description: "Returns all messages in a session, ordered chronologically."
+---
+
+import AuthCallout from "/snippets/auth-callout.mdx";
+
+<AuthCallout />
+
+## Code examples
+
+<CodeGroup>
+
+```bash curl
+curl "https://api.agntix.ai/v1/chat/chat/sessions/ses_01j3m8xkqp8v2nw4f7g9hk0r/messages?page=1&limit=50" \
+  -H "x-api-key: pk_live_••••"
+```
+
+```javascript Node.js
+const sessionId = 'ses_01j3m8xkqp8v2nw4f7g9hk0r';
+
+const { data: messages, pagination } = await fetch(
+  `https://api.agntix.ai/v1/chat/chat/sessions/${sessionId}/messages?page=1&limit=50`,
+  { headers: { 'x-api-key': 'pk_live_••••' } },
+).then(r => r.json());
+
+for (const msg of messages) {
+  console.log(`[${msg.role}] ${msg.content}`);
+}
+```
+
+```python Python
+import httpx
+
+session_id = "ses_01j3m8xkqp8v2nw4f7g9hk0r"
+
+result = httpx.get(
+    f"https://api.agntix.ai/v1/chat/chat/sessions/{session_id}/messages",
+    headers={"x-api-key": "pk_live_••••"},
+    params={"page": 1, "limit": 50},
+).json()
+
+for msg in result["data"]:
+    print(f"[{msg['role']}] {msg['content']}")
+```
+
+</CodeGroup>
+
+## Sample response
+
+```json
+{
+  "data": [
+    {
+      "id": "msg_01j3m_user",
+      "content": "What is my current subscription plan?",
+      "role": "USER",
+      "createdAt": "2026-04-29T09:10:00Z"
+    },
+    {
+      "id": "msg_01j3m_assistant",
+      "content": "Your current plan is Pro.",
+      "role": "ASSISTANT",
+      "createdAt": "2026-04-29T09:10:01Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 50,
+    "total": 2,
+    "totalPages": 1
+  }
+}
+```

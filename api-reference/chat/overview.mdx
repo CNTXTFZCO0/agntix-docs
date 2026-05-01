@@ -1,0 +1,50 @@
+---
+title: "Chat"
+description: "Open chat sessions with an agent and exchange multi-turn messages with streaming support."
+---
+
+The Chat API powers text-based conversations with any agent. A typical flow is:
+
+1. **Create a session** — `POST /v1/chat/chat/sessions` with an `agentId`
+2. **Send messages** — `POST /v1/chat/chat/sessions/{id}/messages` (stream by default)
+3. **Close the session** — `PATCH /v1/chat/chat/sessions/{id}/close` when done
+
+<CardGroup cols={2}>
+  <Card title="Create session" icon="plus" href="/api-reference/chat/sessions/create">
+    Open a new chat session with an agent.
+  </Card>
+  <Card title="Send message" icon="paper-plane" href="/api-reference/chat/messages/send">
+    Send a message and receive a streaming reply.
+  </Card>
+  <Card title="List sessions" icon="list" href="/api-reference/chat/sessions/list">
+    Browse all sessions with filtering by agent, state, or platform.
+  </Card>
+  <Card title="List messages" icon="messages" href="/api-reference/chat/messages/list">
+    Retrieve the full message history for a session.
+  </Card>
+</CardGroup>
+
+## Key concepts
+
+- **Session** — a stateful conversation thread between a user and an agent. All messages, tool calls, and context live inside a session.
+- **Platform** — where the session originated: `SDK`, `WEB`, `WHATSAPP`, or `VOICE`. Affects analytics tagging.
+- **State** — sessions are `OPEN` by default and transition to `CLOSED` when explicitly closed or when the agent considers the conversation complete.
+- **Metadata** — arbitrary key-value pairs on sessions and messages for storing user IDs, locale, correlation IDs, etc.
+
+## Streaming
+
+Message replies stream over [Server-Sent Events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events). Pass `"stream": true` (the default) in the message body. Each event contains:
+
+```
+data: {"id":"msg_01j3m","delta":"Your plan"}
+
+data: {"id":"msg_01j3m","delta":" is Pro."}
+
+data: [DONE]
+```
+
+Set `"stream": false` for a single JSON response when streaming isn't practical (e.g., serverless functions with response buffering).
+
+## Webhook events
+
+Closing a session fires a `session.closed` webhook. Incoming messages fire `session.message.created`. Configure webhooks in the [dashboard](https://app.agntix.ai/settings/webhooks).

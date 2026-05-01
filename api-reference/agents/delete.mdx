@@ -1,0 +1,62 @@
+---
+title: "Delete Agent"
+openapi: "DELETE /v2/chat/agents/{id}"
+description: "Permanently delete an agent. This action cannot be undone."
+---
+
+import AuthCallout from "/snippets/auth-callout.mdx";
+
+<AuthCallout />
+
+<Warning>
+  Deleting an agent is **permanent**. The agent is detached from all phone numbers and call campaigns. Existing session history is retained but the agent can no longer be used for new conversations.
+</Warning>
+
+## Code examples
+
+<CodeGroup>
+
+```bash curl
+curl -X DELETE https://api.agntix.ai/v2/chat/agents/a1b2c3d4-e5f6-7890-abcd-ef1234567890 \
+  -H "x-api-key: pk_live_••••"
+```
+
+```javascript Node.js
+const agentId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+
+const res = await fetch(`https://api.agntix.ai/v2/chat/agents/${agentId}`, {
+  method: 'DELETE',
+  headers: { 'x-api-key': 'pk_live_••••' },
+});
+
+if (res.status === 204) {
+  console.log('Agent deleted successfully.');
+}
+```
+
+```python Python
+import httpx
+
+agent_id = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+
+response = httpx.delete(
+    f"https://api.agntix.ai/v2/chat/agents/{agent_id}",
+    headers={"x-api-key": "pk_live_••••"},
+)
+assert response.status_code == 204
+```
+
+</CodeGroup>
+
+## Soft-delete alternative
+
+If you want to pause an agent without losing it, set `isActive: false` instead:
+
+```bash curl
+curl -X PATCH https://api.agntix.ai/v2/chat/agents/a1b2c3d4-e5f6-7890-abcd-ef1234567890 \
+  -H "x-api-key: pk_live_••••" \
+  -H "Content-Type: application/json" \
+  -d '{ "isActive": false }'
+```
+
+A `204 No Content` response indicates the agent was successfully deleted.

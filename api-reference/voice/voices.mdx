@@ -1,0 +1,78 @@
+---
+title: "List Voices"
+openapi: "GET /v1/voice/voices"
+description: "Returns all available TTS voices across configured providers."
+---
+
+import AuthCallout from "/snippets/auth-callout.mdx";
+
+<AuthCallout />
+
+## Code examples
+
+<CodeGroup>
+
+```bash curl
+curl "https://api.agntix.ai/v1/voice/voices?language=en" \
+  -H "x-api-key: pk_live_••••"
+```
+
+```bash curl (filter by provider)
+curl "https://api.agntix.ai/v1/voice/voices?provider=elevenlabs&language=en" \
+  -H "x-api-key: pk_live_••••"
+```
+
+```javascript Node.js
+const { data: voices } = await fetch(
+  'https://api.agntix.ai/v1/voice/voices?language=en',
+  { headers: { 'x-api-key': 'pk_live_••••' } },
+).then(r => r.json());
+
+for (const voice of voices) {
+  console.log(`${voice.name} (${voice.provider}) — ${voice.gender}`);
+}
+```
+
+```python Python
+import httpx
+
+result = httpx.get(
+    "https://api.agntix.ai/v1/voice/voices",
+    headers={"x-api-key": "pk_live_••••"},
+    params={"language": "en"},
+).json()
+
+for voice in result["data"]:
+    print(f"{voice['name']} ({voice['provider']}) - {voice['gender']}")
+```
+
+</CodeGroup>
+
+## Sample response
+
+```json
+{
+  "data": [
+    {
+      "id": "21m00Tcm4TlvDq8ikWAM",
+      "name": "Rachel",
+      "provider": "elevenlabs",
+      "language": "en",
+      "gender": "female",
+      "previewUrl": "https://storage.googleapis.com/eleven-public-prod/voices/21m00Tcm4TlvDq8ikWAM/preview.mp3"
+    },
+    {
+      "id": "AZnzlk1XvdvUeBnXmlld",
+      "name": "Domi",
+      "provider": "elevenlabs",
+      "language": "en",
+      "gender": "female",
+      "previewUrl": "https://storage.googleapis.com/eleven-public-prod/voices/AZnzlk1XvdvUeBnXmlld/preview.mp3"
+    }
+  ]
+}
+```
+
+<Note>
+  Copy a voice `id` and pass it as `ttsVoiceId` when creating or updating a voice-enabled agent.
+</Note>

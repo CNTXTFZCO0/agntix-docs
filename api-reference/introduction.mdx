@@ -1,44 +1,67 @@
 ---
 title: "API Reference"
-description: "The auto-generated reference for every public Agentix endpoint."
+description: "Complete REST API reference for the Agentix platform. Interactive playgrounds, multi-language examples, and schema docs for every endpoint."
 ---
 
 import ApiBaseUrl from "/snippets/api-base-url.mdx";
-
-The reference pages on this tab are generated from our live OpenAPI specification. Each page shows
-the request/response schema, an interactive **Try it** playground, and copy-paste examples in cURL,
-Node.js, and Python.
+import AuthCallout from "/snippets/auth-callout.mdx";
 
 <ApiBaseUrl />
 
-## How it stays in sync
+<AuthCallout />
 
-The spec at [`/openapi/agentix.json`](/openapi/agentix.json) is regenerated nightly from the gateway
-via [`scripts/sync-openapi.ts`](https://github.com/agntix/agntix-docs-portal/blob/main/scripts/sync-openapi.ts).
-Internal-only endpoints (admin, scheduler, billing, infrastructure) are filtered out at three layers
-before they could ever appear here. See the [migration guide](https://github.com/agntix/agntix-docs-portal/blob/main/MIGRATION_GUIDE.md)
-for the full security model.
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="Agents" icon="robot" href="/api-reference/agents/overview">
+    Create and configure AI agents with custom personas, LLMs, tools, and voice pipelines.
+  </Card>
+  <Card title="Chat" icon="messages" href="/api-reference/chat/overview">
+    Open chat sessions and stream multi-turn conversations with any agent.
+  </Card>
+  <Card title="Voice" icon="microphone" href="/api-reference/voice/overview">
+    List TTS voices, STT/TTS models, and start real-time voice sessions via LiveKit.
+  </Card>
+  <Card title="Tools" icon="wrench" href="/api-reference/tools/overview">
+    Build API webhook tools and function tools that agents can invoke at runtime.
+  </Card>
+  <Card title="Phone Numbers" icon="phone" href="/api-reference/phone-numbers/list">
+    Provision telephony numbers for inbound reception and outbound call campaigns.
+  </Card>
+  <Card title="API Keys" icon="key" href="/api-reference/generated/list-api-keys">
+    Create and revoke organization-scoped API keys for server-side integrations.
+  </Card>
+</CardGroup>
 
 ## Conventions
 
 | Convention | Detail |
 |---|---|
 | **Base URL** | `https://api.agntix.ai` |
-| **Versioning** | Path-based (`/v1/…`, `/v2/…`). New majors run side-by-side for ≥ 6 months |
-| **Auth** | `x-api-key: pk_live_…` or `Authorization: Bearer <jwt>` ([details](/authentication)) |
-| **Encoding** | UTF-8 JSON in and out, unless explicitly multipart |
-| **Timestamps** | RFC 3339 / ISO 8601 in UTC (e.g. `2026-04-28T11:42:11Z`) |
-| **IDs** | Prefixed (`agnt_…`, `ses_…`, `msg_…`) — opaque, never parse them |
-| **Pagination** | `?page=N&limit=N`, max `limit=100` ([details](/guides/pagination)) |
-| **Errors** | Consistent envelope ([details](/errors/error-codes)) |
+| **Versioning** | Path-based (`/v1/…`, `/v2/…`). Major versions run side-by-side for ≥ 6 months. |
+| **Auth** | `x-api-key: pk_live_…` or `Authorization: Bearer <jwt>` — see [Authentication](/authentication). |
+| **Encoding** | UTF-8 JSON in and out, unless explicitly multipart. |
+| **Timestamps** | RFC 3339 / ISO 8601 in UTC, e.g. `2026-04-28T11:42:11Z`. |
+| **IDs** | Prefixed (`agnt_…`, `ses_…`, `msg_…`) — opaque, never parse them. |
+| **Pagination** | `?page=N&limit=N`, max `limit=100`. See [Pagination](/guides/pagination). |
+| **Errors** | Consistent `{ error: { code, message, status } }` envelope. See [Error Codes](/errors/error-codes). |
 
-## Use the playground
+## Interactive playground
 
-Click any endpoint in the sidebar, fill in the request fields, and hit **Send**. The playground
-authenticates with the API key you set at the top right of the page (stored in browser local
-storage — never sent to us).
+Click any endpoint in the sidebar, fill in the fields, and press **Send**. The playground authenticates using the API key you enter at the top-right of the page (stored in browser local storage — never sent to us).
 
-## Webhooks
+## How the spec stays in sync
 
-Webhooks are documented under the [Webhooks](/webhooks/overview) tab, not here. The reference covers
-synchronous request/response endpoints only.
+The OpenAPI spec at [`/openapi/agentix.json`](/openapi/agentix.json) is regenerated from the live gateway via [`scripts/sync-openapi.ts`](https://github.com/agntix/agntix-docs-portal/blob/main/scripts/sync-openapi.ts). Internal-only routes (admin, scheduler, billing infrastructure) are stripped at three independent layers before the spec is published.
+
+## Streaming
+
+Message endpoints (`POST /v1/chat/chat/sessions/{id}/messages`) support Server-Sent Events. Pass `"stream": true` in the request body to receive incremental tokens. Each SSE event contains a partial `delta` string; the stream ends with `data: [DONE]`.
+
+```
+data: {"id":"msg_01j3m","delta":"Your "}
+
+data: {"id":"msg_01j3m","delta":"plan is Pro."}
+
+data: [DONE]
+```

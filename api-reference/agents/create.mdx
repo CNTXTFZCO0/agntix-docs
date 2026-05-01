@@ -1,0 +1,138 @@
+---
+title: "Create Agent"
+openapi: "POST /v2/chat/agents"
+description: "Create a new AI agent for your organization."
+---
+
+import AuthCallout from "/snippets/auth-callout.mdx";
+
+<AuthCallout />
+
+<Note>
+  Use [`GET /v1/chat/models`](/api-reference/generated/list-models) to get a valid `modelId` before creating an agent.
+</Note>
+
+## Code examples
+
+<CodeGroup>
+
+```bash curl
+curl -X POST https://api.agntix.ai/v2/chat/agents \
+  -H "x-api-key: pk_live_••••" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fullName": "Customer Support Bot",
+    "description": "Handles tier-1 customer queries",
+    "role": "You are a helpful, concise support agent for Acme Inc.",
+    "language": "en",
+    "systemPrompt": "You specialize in billing, returns, and account access. Keep responses under 3 sentences.",
+    "modelId": "96f3b0a3-1234-5678-abcd-ef1234567890"
+  }'
+```
+
+```javascript Node.js
+const res = await fetch('https://api.agntix.ai/v2/chat/agents', {
+  method: 'POST',
+  headers: {
+    'x-api-key': 'pk_live_••••',
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    fullName: 'Customer Support Bot',
+    description: 'Handles tier-1 customer queries',
+    role: 'You are a helpful, concise support agent for Acme Inc.',
+    language: 'en',
+    systemPrompt: 'You specialize in billing, returns, and account access.',
+    modelId: '96f3b0a3-1234-5678-abcd-ef1234567890',
+    tools: [{ toolId: '550e8400-e29b-41d4-a716-446655440000' }],
+  }),
+});
+const agent = await res.json();
+console.log('Created agent:', agent.id);
+```
+
+```python Python
+import httpx
+
+agent = httpx.post(
+    "https://api.agntix.ai/v2/chat/agents",
+    headers={"x-api-key": "pk_live_••••"},
+    json={
+        "fullName": "Customer Support Bot",
+        "description": "Handles tier-1 customer queries",
+        "role": "You are a helpful, concise support agent for Acme Inc.",
+        "language": "en",
+        "systemPrompt": "You specialize in billing, returns, and account access.",
+        "modelId": "96f3b0a3-1234-5678-abcd-ef1234567890",
+    },
+).json()
+print("Created agent:", agent["id"])
+```
+
+</CodeGroup>
+
+## Creating a voice agent
+
+To create an agent capable of handling phone calls, add `voiceEnabled: true` and pick a `voicePipelineMode`:
+
+<CodeGroup>
+
+```bash curl
+curl -X POST https://api.agntix.ai/v2/chat/agents \
+  -H "x-api-key: pk_live_••••" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fullName": "Inbound Receptionist",
+    "description": "Answers inbound calls and routes to the correct department",
+    "role": "You are a professional phone receptionist for Acme Inc.",
+    "language": "en",
+    "modelId": "96f3b0a3-1234-5678-abcd-ef1234567890",
+    "voiceEnabled": true,
+    "voicePipelineMode": "pipeline",
+    "sttModelId": "deepgram-nova-2-uuid",
+    "ttsModelId": "eleven-turbo-uuid"
+  }'
+```
+
+```javascript Node.js
+const agent = await fetch('https://api.agntix.ai/v2/chat/agents', {
+  method: 'POST',
+  headers: {
+    'x-api-key': 'pk_live_••••',
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    fullName: 'Inbound Receptionist',
+    description: 'Answers inbound calls and routes to the correct department',
+    role: 'You are a professional phone receptionist for Acme Inc.',
+    language: 'en',
+    modelId: '96f3b0a3-1234-5678-abcd-ef1234567890',
+    voiceEnabled: true,
+    voicePipelineMode: 'pipeline',
+    sttModelId: 'deepgram-nova-2-uuid',
+    ttsModelId: 'eleven-turbo-uuid',
+  }),
+}).then(r => r.json());
+```
+
+</CodeGroup>
+
+## Sample response
+
+```json
+{
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "fullName": "Customer Support Bot",
+  "description": "Handles tier-1 customer queries",
+  "role": "You are a helpful, concise support agent for Acme Inc.",
+  "language": "en",
+  "systemPrompt": "You specialize in billing, returns, and account access.",
+  "voiceEnabled": false,
+  "isActive": true,
+  "isPublic": false,
+  "orgId": "org_2abc123",
+  "modelId": "96f3b0a3-1234-5678-abcd-ef1234567890",
+  "createdAt": "2026-04-29T08:00:00Z",
+  "updatedAt": "2026-04-29T08:00:00Z"
+}
+```

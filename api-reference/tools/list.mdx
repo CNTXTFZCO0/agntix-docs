@@ -1,0 +1,71 @@
+---
+title: "List Tools"
+openapi: "GET /v1/chat/tools"
+description: "Returns all tools in your organization, with optional filtering by type or name."
+---
+
+import AuthCallout from "/snippets/auth-callout.mdx";
+
+<AuthCallout />
+
+## Code examples
+
+<CodeGroup>
+
+```bash curl
+curl "https://api.agntix.ai/v1/chat/tools?page=1&limit=20" \
+  -H "x-api-key: pk_live_••••"
+```
+
+```bash curl (filter by type)
+curl "https://api.agntix.ai/v1/chat/tools?type=API_TOOL&search=balance" \
+  -H "x-api-key: pk_live_••••"
+```
+
+```javascript Node.js
+const { data: tools, pagination } = await fetch(
+  'https://api.agntix.ai/v1/chat/tools?page=1&limit=20',
+  { headers: { 'x-api-key': 'pk_live_••••' } },
+).then(r => r.json());
+
+console.log(`${pagination.total} tools found`);
+```
+
+```python Python
+import httpx
+
+result = httpx.get(
+    "https://api.agntix.ai/v1/chat/tools",
+    headers={"x-api-key": "pk_live_••••"},
+    params={"page": 1, "limit": 20, "type": "API_TOOL"},
+).json()
+
+for tool in result["data"]:
+    print(f"{tool['name']} ({tool['type']})")
+```
+
+</CodeGroup>
+
+## Sample response
+
+```json
+{
+  "data": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "name": "GET_ACCOUNT_BALANCE",
+      "description": "Retrieves the current account balance.",
+      "type": "API_TOOL",
+      "orgId": "org_2abc123",
+      "createdAt": "2026-04-28T10:00:00Z",
+      "updatedAt": "2026-04-28T10:00:00Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 1,
+    "totalPages": 1
+  }
+}
+```

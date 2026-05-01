@@ -1,0 +1,68 @@
+---
+title: "Provision Phone Number"
+openapi: "POST /v1/chat/phone-numbers"
+description: "Provision a new telephony phone number and optionally map it to an agent."
+---
+
+import AuthCallout from "/snippets/auth-callout.mdx";
+
+<AuthCallout />
+
+## Code examples
+
+<CodeGroup>
+
+```bash curl
+curl -X POST https://api.agntix.ai/v1/chat/phone-numbers \
+  -H "x-api-key: pk_live_••••" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "provider": "twilio",
+    "number": "+15550001234",
+    "agentId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+  }'
+```
+
+```javascript Node.js
+const phoneNumber = await fetch('https://api.agntix.ai/v1/chat/phone-numbers', {
+  method: 'POST',
+  headers: {
+    'x-api-key': 'pk_live_••••',
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    provider: 'twilio',
+    number: '+15550001234',
+    agentId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+  }),
+}).then(r => r.json());
+```
+
+```python Python
+import httpx
+
+phone_number = httpx.post(
+    "https://api.agntix.ai/v1/chat/phone-numbers",
+    headers={"x-api-key": "pk_live_••••"},
+    json={
+        "provider": "twilio",
+        "number": "+15550001234",
+        "agentId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    },
+).json()
+```
+
+</CodeGroup>
+
+## Sample response
+
+```json
+{
+  "id": "pn_01j3m...",
+  "number": "+15550001234",
+  "provider": "twilio",
+  "agentId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "orgId": "org_2abc123",
+  "createdAt": "2026-04-29T10:00:00Z"
+}
+```

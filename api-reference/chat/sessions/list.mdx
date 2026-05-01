@@ -1,0 +1,78 @@
+---
+title: "List Sessions"
+openapi: "GET /v1/chat/chat/sessions"
+description: "Returns a paginated list of chat sessions, ordered most-recent first."
+---
+
+import AuthCallout from "/snippets/auth-callout.mdx";
+
+<AuthCallout />
+
+## Code examples
+
+<CodeGroup>
+
+```bash curl
+curl "https://api.agntix.ai/v1/chat/chat/sessions?agentId=a1b2c3d4-e5f6-7890-abcd-ef1234567890&state=OPEN&limit=20" \
+  -H "x-api-key: pk_live_••••"
+```
+
+```javascript Node.js
+const params = new URLSearchParams({
+  agentId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+  state: 'OPEN',
+  page: '1',
+  limit: '20',
+});
+
+const { data, pagination } = await fetch(
+  `https://api.agntix.ai/v1/chat/chat/sessions?${params}`,
+  { headers: { 'x-api-key': 'pk_live_••••' } },
+).then(r => r.json());
+
+console.log(`${pagination.total} sessions found`);
+```
+
+```python Python
+import httpx
+
+result = httpx.get(
+    "https://api.agntix.ai/v1/chat/chat/sessions",
+    headers={"x-api-key": "pk_live_••••"},
+    params={
+        "agentId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "state": "OPEN",
+        "page": 1,
+        "limit": 20,
+    },
+).json()
+
+sessions = result["data"]
+print(f"{result['pagination']['total']} sessions found")
+```
+
+</CodeGroup>
+
+## Sample response
+
+```json
+{
+  "data": [
+    {
+      "id": "ses_01j3m8xkqp8v2nw4f7g9hk0r",
+      "agentId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "platform": "SDK",
+      "state": "OPEN",
+      "metadata": { "userId": "usr_123" },
+      "createdAt": "2026-04-29T09:00:00Z",
+      "updatedAt": "2026-04-29T09:00:00Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 1,
+    "totalPages": 1
+  }
+}
+```

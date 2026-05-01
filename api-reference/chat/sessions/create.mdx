@@ -1,0 +1,86 @@
+---
+title: "Create Session"
+openapi: "POST /v1/chat/chat/sessions"
+description: "Open a new chat session with an agent."
+---
+
+import AuthCallout from "/snippets/auth-callout.mdx";
+
+<AuthCallout />
+
+## Code examples
+
+<CodeGroup>
+
+```bash curl
+curl -X POST https://api.agntix.ai/v1/chat/chat/sessions \
+  -H "x-api-key: pk_live_••••" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "agentId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "platform": "SDK",
+    "metadata": {
+      "userId": "usr_123",
+      "locale": "en-US"
+    }
+  }'
+```
+
+```javascript Node.js
+const session = await fetch('https://api.agntix.ai/v1/chat/chat/sessions', {
+  method: 'POST',
+  headers: {
+    'x-api-key': 'pk_live_••••',
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    agentId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+    platform: 'SDK',
+    metadata: { userId: 'usr_123', locale: 'en-US' },
+  }),
+}).then(r => r.json());
+
+console.log('Session ID:', session.id);
+// Send your first message using session.id
+```
+
+```python Python
+import httpx
+
+session = httpx.post(
+    "https://api.agntix.ai/v1/chat/chat/sessions",
+    headers={"x-api-key": "pk_live_••••"},
+    json={
+        "agentId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "platform": "SDK",
+        "metadata": {"userId": "usr_123", "locale": "en-US"},
+    },
+).json()
+
+session_id = session["id"]
+print("Session ID:", session_id)
+```
+
+</CodeGroup>
+
+## Sample response
+
+```json
+{
+  "id": "ses_01j3m8xkqp8v2nw4f7g9hk0r",
+  "agentId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "platform": "SDK",
+  "state": "OPEN",
+  "metadata": {
+    "userId": "usr_123",
+    "locale": "en-US"
+  },
+  "orgId": "org_2abc123",
+  "createdAt": "2026-04-29T09:00:00Z",
+  "updatedAt": "2026-04-29T09:00:00Z"
+}
+```
+
+<Note>
+  Store the session `id` — you'll pass it as `{sessionId}` in every subsequent message call.
+</Note>

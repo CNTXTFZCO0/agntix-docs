@@ -1,0 +1,61 @@
+---
+title: "Voice"
+description: "Real-time voice sessions, TTS voices, and STT/TTS model discovery."
+---
+
+The Voice API provides everything you need to build voice-powered agents:
+
+- **List voices** — browse TTS voices across all configured providers
+- **List models** — discover TTS, STT, and STS models
+- **Create voice session** — establish a real-time voice session over LiveKit WebRTC
+- **List providers** — see which voice providers are enabled for your organization
+
+<CardGroup cols={2}>
+  <Card title="List voices" icon="waveform" href="/api-reference/voice/voices">
+    Browse all TTS voices available across providers.
+  </Card>
+  <Card title="Create voice session" icon="phone" href="/api-reference/voice/sessions-create">
+    Start a real-time voice call powered by LiveKit.
+  </Card>
+  <Card title="List voice models" icon="microchip" href="/api-reference/voice/models">
+    Discover TTS, STT, and STS models for agent configuration.
+  </Card>
+  <Card title="List providers" icon="plug" href="/api-reference/voice/providers">
+    View enabled voice providers for your organization.
+  </Card>
+</CardGroup>
+
+## Key concepts
+
+- **TTS (Text-to-Speech)** — converts the agent's text reply into audio streamed to the caller.
+- **STT (Speech-to-Text)** — converts caller speech into text that the LLM processes.
+- **STS (Speech-to-Speech)** — end-to-end speech model that bypasses the text layer entirely (lower latency, less control).
+- **Voice pipeline** — the combination of STT → LLM → TTS that processes a voice turn.
+- **`voicePipelineMode`** on agents:
+  - `pipeline` — classic STT + LLM + TTS
+  - `sts` — direct speech-to-speech
+  - `hybrid` — adaptive mode that switches based on conditions
+
+## Connecting to a voice session
+
+After calling `POST /v1/voice/sessions`, you receive a `token` and `serverUrl` for [LiveKit](https://livekit.io). Use the LiveKit SDK to connect:
+
+```javascript Node.js
+import { Room, RoomEvent } from 'livekit-client';
+
+const { token, serverUrl } = await fetch('https://api.agntix.ai/v1/voice/sessions', {
+  method: 'POST',
+  headers: { 'x-api-key': 'pk_live_••••', 'Content-Type': 'application/json' },
+  body: JSON.stringify({ agentId: 'a1b2c3d4-...' }),
+}).then(r => r.json());
+
+const room = new Room();
+await room.connect(serverUrl, token);
+room.on(RoomEvent.TrackSubscribed, (track) => {
+  // play agent audio
+});
+```
+
+## Inbound calls
+
+Assign a phone number to an agent in the dashboard or via `PATCH /v1/chat/phone-numbers/{id}`. Inbound calls to that number automatically start a voice session with the assigned agent.

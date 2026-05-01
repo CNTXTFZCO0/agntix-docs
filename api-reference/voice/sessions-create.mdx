@@ -1,0 +1,96 @@
+---
+title: "Create Voice Session"
+openapi: "POST /v1/voice/sessions"
+description: "Open a real-time voice session with an agent. Returns LiveKit connection credentials."
+---
+
+import AuthCallout from "/snippets/auth-callout.mdx";
+
+<AuthCallout />
+
+<Note>
+  The agent must have `voiceEnabled: true` and a `voicePipelineMode` set. See [Create Agent](/api-reference/agents/create) for voice configuration details.
+</Note>
+
+## Code examples
+
+<CodeGroup>
+
+```bash curl
+curl -X POST https://api.agntix.ai/v1/voice/sessions \
+  -H "x-api-key: pk_live_••••" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "agentId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "metadata": { "callerId": "+15550001234" }
+  }'
+```
+
+```javascript Node.js
+const voiceSession = await fetch('https://api.agntix.ai/v1/voice/sessions', {
+  method: 'POST',
+  headers: {
+    'x-api-key': 'pk_live_••••',
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    agentId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+    metadata: { callerId: '+15550001234' },
+  }),
+}).then(r => r.json());
+
+// Connect to the LiveKit room using the returned token + serverUrl
+const { token, serverUrl } = voiceSession;
+```
+
+```python Python
+import httpx
+
+voice_session = httpx.post(
+    "https://api.agntix.ai/v1/voice/sessions",
+    headers={"x-api-key": "pk_live_••••"},
+    json={
+        "agentId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "metadata": {"callerId": "+15550001234"},
+    },
+).json()
+
+token = voice_session["token"]
+server_url = voice_session["serverUrl"]
+```
+
+</CodeGroup>
+
+## Connecting via LiveKit
+
+Use the `token` and `serverUrl` from the response to connect with the [LiveKit client SDK](https://docs.livekit.io/realtime/client/):
+
+```javascript Node.js
+import { Room, RoomEvent, Track } from 'livekit-client';
+
+const room = new Room({
+  adaptiveStream: true,
+  dynacast: true,
+});
+
+room.on(RoomEvent.TrackSubscribed, (track) => {
+  if (track.kind === Track.Kind.Audio) {
+    track.attach(); // plays agent audio in the browser
+  }
+});
+
+await room.connect(serverUrl, token);
+await room.localParticipant.setMicrophoneEnabled(true);
+```
+
+## Sample response
+
+```json
+{
+  "id": "vs_01j3m...",
+  "agentId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "serverUrl": "wss://agntix-voice.livekit.cloud",
+  "createdAt": "2026-04-29T10:00:00Z"
+}
+```

@@ -2,29 +2,1894 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Agentix API",
-    "version": "0.0.0-bootstrap",
-    "description": "Placeholder spec. Run `pnpm sync:openapi` against a live gateway to replace this file with the real, internal-stripped specification."
+    "version": "1.0.0",
+    "description": "The Agentix API lets you build, deploy, and operate AI chat and voice agents. All requests are sent to `https://api.agntix.ai`. Authenticate with an API key (`x-api-key`) or a Clerk-issued JWT (`Authorization: Bearer <token>`).\n\nBase URL: `https://api.agntix.ai`"
   },
   "servers": [
     { "url": "https://api.agntix.ai", "description": "Production" }
   ],
-  "paths": {},
+  "security": [
+    { "ApiKeyAuth": [] },
+    { "BearerAuth": [] }
+  ],
+  "tags": [
+    {
+      "name": "Agents",
+      "description": "Create and manage AI agents — the core building block of Agentix. An agent encapsulates a system prompt, LLM, tools, knowledge store, and voice configuration."
+    },
+    {
+      "name": "Chat",
+      "description": "Open chat sessions with an agent and exchange messages. Supports streaming responses over SSE."
+    },
+    {
+      "name": "Voice",
+      "description": "List available voices and TTS/STT models, and create real-time voice sessions."
+    },
+    {
+      "name": "Tools",
+      "description": "Extend agent capabilities with API tools (webhook calls) or function tools (server-side logic)."
+    },
+    {
+      "name": "Phone Numbers",
+      "description": "Provision and manage telephony numbers for inbound and outbound voice calls."
+    },
+    {
+      "name": "Models",
+      "description": "Browse available LLM, STT, and TTS models supported by Agentix."
+    },
+    {
+      "name": "Analytics",
+      "description": "Query call and agent-level performance metrics."
+    },
+    {
+      "name": "API Keys",
+      "description": "Create and manage organization-scoped API keys."
+    },
+    {
+      "name": "Contacts",
+      "description": "Manage customer contacts that can be linked to chat sessions."
+    },
+    {
+      "name": "Call Campaigns",
+      "description": "Launch and manage outbound call campaigns against a list of contacts."
+    },
+    {
+      "name": "Subscriptions",
+      "description": "View billing plans, usage quotas, and manage Stripe subscriptions."
+    }
+  ],
+  "paths": {
+    "/v1/chat/agents": {
+      "get": {
+        "operationId": "listAgents",
+        "summary": "List agents",
+        "description": "Returns a paginated list of all agents belonging to your organization.",
+        "tags": ["Agents"],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number (1-based).",
+            "schema": { "type": "integer", "default": 1, "minimum": 1 }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of results per page (max 100).",
+            "schema": { "type": "integer", "default": 20, "maximum": 100 }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Filter by agent name (case-insensitive substring match).",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "isActive",
+            "in": "query",
+            "description": "Filter by active status.",
+            "schema": { "type": "boolean" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of agents.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PaginatedAgents" },
+                "example": {
+                  "data": [
+                    {
+                      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+                      "fullName": "Customer Support Bot",
+                      "description": "Handles tier-1 customer queries",
+                      "role": "You are a helpful support agent for Acme Inc.",
+                      "language": "en",
+                      "voiceEnabled": false,
+                      "isActive": true,
+                      "isPublic": false,
+                      "orgId": "org_2abc123",
+                      "createdAt": "2026-04-28T11:42:11Z",
+                      "updatedAt": "2026-04-28T11:42:11Z"
+                    }
+                  ],
+                  "pagination": { "page": 1, "limit": 20, "total": 1, "totalPages": 1 }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/v2/chat/agents": {
+      "get": {
+        "operationId": "listAgentsV2",
+        "summary": "List agents (v2)",
+        "description": "Returns a paginated list of agents with enriched sub-agent tree and filter support.",
+        "tags": ["Agents"],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "integer", "default": 1 }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "default": 20, "maximum": 100 }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "isActive",
+            "in": "query",
+            "schema": { "type": "boolean" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of agents.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PaginatedAgents" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "post": {
+        "operationId": "createAgent",
+        "summary": "Create agent",
+        "description": "Creates a new AI agent for your organization. Use `modelId` from `GET /v1/chat/models` to select an LLM. Enable voice by setting `voiceEnabled: true` and specifying a `voicePipelineMode`.",
+        "tags": ["Agents"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateAgentRequest" },
+              "example": {
+                "fullName": "Customer Support Bot",
+                "description": "Handles tier-1 customer queries",
+                "role": "You are a helpful, concise support agent for Acme Inc. Always greet the user by name if available.",
+                "language": "en",
+                "systemPrompt": "You specialize in billing, returns, and account access.",
+                "modelId": "96f3b0a3-1234-5678-abcd-ef1234567890",
+                "tools": [{ "toolId": "550e8400-e29b-41d4-a716-446655440000" }]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Agent created successfully.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Agent" },
+                "example": {
+                  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+                  "fullName": "Customer Support Bot",
+                  "description": "Handles tier-1 customer queries",
+                  "role": "You are a helpful, concise support agent for Acme Inc.",
+                  "language": "en",
+                  "voiceEnabled": false,
+                  "isActive": true,
+                  "isPublic": false,
+                  "orgId": "org_2abc123",
+                  "createdAt": "2026-04-29T08:00:00Z",
+                  "updatedAt": "2026-04-29T08:00:00Z"
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/v2/chat/agents/{id}": {
+      "get": {
+        "operationId": "getAgent",
+        "summary": "Get agent",
+        "description": "Retrieves a single agent by its UUID, including its model, attached tools, knowledge store, and voice configuration.",
+        "tags": ["Agents"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Agent UUID.",
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Agent detail.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AgentDetail" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "patch": {
+        "operationId": "updateAgent",
+        "summary": "Update agent",
+        "description": "Partially updates an agent. Only fields present in the request body are modified. Pass `subAgents: []` to remove all sub-agents.",
+        "tags": ["Agents"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateAgentRequest" },
+              "example": {
+                "fullName": "Tier-1 Support — Updated",
+                "systemPrompt": "You specialize in billing, returns, and account access. Be brief.",
+                "isActive": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated agent.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Agent" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "delete": {
+        "operationId": "deleteAgent",
+        "summary": "Delete agent",
+        "description": "Permanently deletes an agent and detaches it from all phone numbers and campaigns. This action cannot be undone.",
+        "tags": ["Agents"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "Agent deleted." },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/v1/chat/chat/sessions": {
+      "post": {
+        "operationId": "createSession",
+        "summary": "Create session",
+        "description": "Opens a new chat session with an agent. Returns the session object including the session ID you'll use in subsequent message calls.",
+        "tags": ["Chat"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateSessionRequest" },
+              "example": {
+                "agentId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+                "platform": "SDK",
+                "metadata": { "userId": "usr_123", "locale": "en-US" }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Session created.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ChatSession" },
+                "example": {
+                  "id": "ses_01j3m8xkqp8v2nw4f7g9hk0r",
+                  "agentId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+                  "platform": "SDK",
+                  "state": "OPEN",
+                  "metadata": { "userId": "usr_123", "locale": "en-US" },
+                  "createdAt": "2026-04-29T09:00:00Z",
+                  "updatedAt": "2026-04-29T09:00:00Z"
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "get": {
+        "operationId": "listSessions",
+        "summary": "List sessions",
+        "description": "Returns a paginated list of chat sessions for your organization, ordered by most recent first.",
+        "tags": ["Chat"],
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20, "maximum": 100 } },
+          {
+            "name": "agentId",
+            "in": "query",
+            "description": "Filter by agent.",
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "description": "Filter by session state.",
+            "schema": { "type": "string", "enum": ["OPEN", "CLOSED"] }
+          },
+          {
+            "name": "platform",
+            "in": "query",
+            "description": "Filter by originating platform.",
+            "schema": { "type": "string", "enum": ["SDK", "WEB", "WHATSAPP", "VOICE"] }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of sessions.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PaginatedSessions" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/v1/chat/chat/sessions/{sessionId}": {
+      "get": {
+        "operationId": "getSession",
+        "summary": "Get session",
+        "description": "Retrieves a single session by ID, including its current state, metadata, and contact.",
+        "tags": ["Chat"],
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session detail.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ChatSession" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/v1/chat/chat/sessions/{sessionId}/close": {
+      "patch": {
+        "operationId": "closeSession",
+        "summary": "Close session",
+        "description": "Closes an open session. Once closed, no further messages can be sent. Triggers session-closed webhooks if configured.",
+        "tags": ["Chat"],
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "description": "Optional reason for closing the session.",
+                    "example": "RESOLVED"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Session closed.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ChatSession" } }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/v1/chat/chat/sessions/{sessionId}/messages": {
+      "post": {
+        "operationId": "sendMessage",
+        "summary": "Send message",
+        "description": "Sends a user message to the agent and returns the assistant's reply. Set `stream: true` (the default) to receive the reply as a Server-Sent Events stream. Set `stream: false` for a single JSON response.",
+        "tags": ["Chat"],
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SendMessageRequest" },
+              "example": {
+                "content": "What is my current subscription plan?",
+                "stream": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Assistant reply (SSE stream when `stream: true`, JSON object when `stream: false`).",
+            "content": {
+              "text/event-stream": {
+                "schema": { "type": "string" },
+                "example": "data: {\"id\":\"msg_01j3m\",\"delta\":\"Your current plan is\"}\n\ndata: {\"id\":\"msg_01j3m\",\"delta\":\" Pro.\"}\n\ndata: [DONE]\n\n"
+              },
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ChatMessage" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "get": {
+        "operationId": "listMessages",
+        "summary": "List messages",
+        "description": "Returns all messages in a session, ordered chronologically.",
+        "tags": ["Chat"],
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 50, "maximum": 100 } }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of messages.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PaginatedMessages" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/v1/voice/voices": {
+      "get": {
+        "operationId": "listVoices",
+        "summary": "List voices",
+        "description": "Returns all available TTS voices. Voices are sourced from configured providers (ElevenLabs, Azure, etc.). Use `voiceId` when creating an agent with voice enabled.",
+        "tags": ["Voice"],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "query",
+            "description": "Filter by provider.",
+            "schema": { "type": "string", "example": "elevenlabs" }
+          },
+          {
+            "name": "language",
+            "in": "query",
+            "description": "Filter by language code (e.g. `en`, `ar`).",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of available voices.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Voice" }
+                    }
+                  }
+                },
+                "example": {
+                  "data": [
+                    {
+                      "id": "21m00Tcm4TlvDq8ikWAM",
+                      "name": "Rachel",
+                      "provider": "elevenlabs",
+                      "language": "en",
+                      "gender": "female",
+                      "previewUrl": "https://storage.googleapis.com/eleven-public-prod/voices/21m00Tcm4TlvDq8ikWAM/preview.mp3"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/v1/voice/models": {
+      "get": {
+        "operationId": "listVoiceModels",
+        "summary": "List voice models",
+        "description": "Returns TTS and STT models available for voice-enabled agents.",
+        "tags": ["Voice"],
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "description": "Filter by model type.",
+            "schema": { "type": "string", "enum": ["TTS", "STT", "STS"] }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of voice models.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/VoiceModel" } }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/v1/voice/sessions": {
+      "post": {
+        "operationId": "createVoiceSession",
+        "summary": "Create voice session",
+        "description": "Opens a real-time voice session for an agent. Returns connection tokens for LiveKit.",
+        "tags": ["Voice"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateVoiceSessionRequest" },
+              "example": {
+                "agentId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+                "metadata": { "callerId": "+1-555-000-0001" }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Voice session created with LiveKit token.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/VoiceSession" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/v1/voice/providers": {
+      "get": {
+        "operationId": "listVoiceProviders",
+        "summary": "List voice providers",
+        "description": "Returns the voice providers configured for your organization (e.g. ElevenLabs, Azure, Deepgram).",
+        "tags": ["Voice"],
+        "responses": {
+          "200": {
+            "description": "List of providers.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/VoiceProvider" } }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/v1/chat/tools": {
+      "get": {
+        "operationId": "listTools",
+        "summary": "List tools",
+        "description": "Returns all tools in your organization. Tools can be API_TOOL (webhooks) or FUNCTION_TOOL (server-side functions).",
+        "tags": ["Tools"],
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20, "maximum": 100 } },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "Filter by tool type.",
+            "schema": { "type": "string", "enum": ["API_TOOL", "FUNCTION_TOOL"] }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Search by tool name.",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of tools.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PaginatedTools" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "post": {
+        "operationId": "createTool",
+        "summary": "Create tool",
+        "description": "Creates a new tool. Provide either `apiTool` (for webhook-based tools) or `functionTool` (for server-side logic). The `ajvPropertiesSchema` defines the JSON Schema the LLM uses to construct the tool call.",
+        "tags": ["Tools"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateToolRequest" },
+              "example": {
+                "name": "GET_ACCOUNT_BALANCE",
+                "description": "Retrieves the current account balance for the authenticated customer.",
+                "type": "API_TOOL",
+                "apiTool": {
+                  "url": "https://api.acme.com/v1/accounts/{{customerId}}/balance",
+                  "method": "GET",
+                  "headers": { "Authorization": "Bearer {{apiKey}}" }
+                },
+                "ajvPropertiesSchema": {
+                  "type": "object",
+                  "properties": {
+                    "customerId": {
+                      "type": "string",
+                      "description": "The customer's unique identifier."
+                    }
+                  },
+                  "required": ["customerId"]
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Tool created.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Tool" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/v1/chat/tools/{id}": {
+      "get": {
+        "operationId": "getTool",
+        "summary": "Get tool",
+        "description": "Retrieves a single tool by ID.",
+        "tags": ["Tools"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tool detail.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Tool" } }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "patch": {
+        "operationId": "updateTool",
+        "summary": "Update tool",
+        "description": "Partially updates a tool. Changes take effect immediately on all agents that use the tool.",
+        "tags": ["Tools"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateToolRequest" },
+              "example": {
+                "description": "Retrieves the current account balance and pending transactions.",
+                "ajvPropertiesSchema": {
+                  "type": "object",
+                  "properties": {
+                    "customerId": { "type": "string" },
+                    "includeTransactions": { "type": "boolean", "default": false }
+                  },
+                  "required": ["customerId"]
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated tool.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Tool" } }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "delete": {
+        "operationId": "deleteTool",
+        "summary": "Delete tool",
+        "description": "Deletes a tool and automatically detaches it from all agents. This action cannot be undone.",
+        "tags": ["Tools"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "Tool deleted." },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/v1/chat/models": {
+      "get": {
+        "operationId": "listModels",
+        "summary": "List LLM models",
+        "description": "Returns the LLM models available for selection when creating an agent.",
+        "tags": ["Models"],
+        "responses": {
+          "200": {
+            "description": "List of models.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/LLMModel" } }
+                  }
+                },
+                "example": {
+                  "data": [
+                    {
+                      "id": "96f3b0a3-1234-5678-abcd-ef1234567890",
+                      "name": "gpt-4.1",
+                      "provider": "openai",
+                      "contextWindow": 1000000,
+                      "isActive": true
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/v1/chat/phone-numbers": {
+      "get": {
+        "operationId": "listPhoneNumbers",
+        "summary": "List phone numbers",
+        "description": "Returns all phone numbers provisioned for your organization.",
+        "tags": ["Phone Numbers"],
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of phone numbers.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PaginatedPhoneNumbers" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "post": {
+        "operationId": "createPhoneNumber",
+        "summary": "Provision phone number",
+        "description": "Provisions a new phone number and optionally maps it to an agent.",
+        "tags": ["Phone Numbers"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreatePhoneNumberRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Phone number provisioned.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/PhoneNumber" } }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/v1/chat/phone-numbers/outbound/call": {
+      "post": {
+        "operationId": "startOutboundCall",
+        "summary": "Start outbound call",
+        "description": "Initiates an outbound voice call from a provisioned number to a target phone number.",
+        "tags": ["Phone Numbers"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/StartOutboundCallRequest" },
+              "example": {
+                "phoneNumberId": "pn_01j3m...",
+                "to": "+15550001234",
+                "agentId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+                "metadata": { "campaignId": "camp_01j3m" }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Call initiated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "callId": { "type": "string" },
+                    "status": { "type": "string", "example": "INITIATED" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/v1/chat/api-keys": {
+      "get": {
+        "operationId": "listApiKeys",
+        "summary": "List API keys",
+        "description": "Returns all API keys for your organization. Key values are masked — only the prefix is shown after creation.",
+        "tags": ["API Keys"],
+        "responses": {
+          "200": {
+            "description": "List of API keys.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/ApiKey" } }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "post": {
+        "operationId": "createApiKey",
+        "summary": "Create API key",
+        "description": "Creates a new API key. The full key value is returned **only once** at creation time — store it securely.",
+        "tags": ["API Keys"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateApiKeyRequest" },
+              "example": {
+                "name": "Production server key",
+                "description": "Used by the backend service for agent API calls"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "API key created. The `key` field is only present in this response.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiKeyCreated" },
+                "example": {
+                  "id": "key_01j3m...",
+                  "name": "Production server key",
+                  "key": "pk_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+                  "prefix": "pk_live_xxxxx",
+                  "createdAt": "2026-04-29T10:00:00Z"
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/v1/chat/api-keys/{id}/revoke": {
+      "post": {
+        "operationId": "revokeApiKey",
+        "summary": "Revoke API key",
+        "description": "Immediately revokes an API key. Any in-flight requests using this key will receive `401 Unauthorized`.",
+        "tags": ["API Keys"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Key revoked." },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/v1/chat/contacts": {
+      "get": {
+        "operationId": "listContacts",
+        "summary": "List contacts",
+        "description": "Returns a paginated list of contacts for your organization.",
+        "tags": ["Contacts"],
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } },
+          { "name": "search", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated contacts.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PaginatedContacts" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "post": {
+        "operationId": "createContact",
+        "summary": "Create contact",
+        "description": "Creates a new contact in your organization.",
+        "tags": ["Contacts"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateContactRequest" },
+              "example": {
+                "externalId": "crm-cust-9821",
+                "name": "Jane Doe",
+                "phone": "+15550001234",
+                "email": "jane@acme.com",
+                "metadata": { "plan": "enterprise", "region": "us-east" }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Contact created.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Contact" } }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/v1/chat/call-campaigns": {
+      "get": {
+        "operationId": "listCampaigns",
+        "summary": "List call campaigns",
+        "description": "Returns all call campaigns for your organization.",
+        "tags": ["Call Campaigns"],
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of campaigns.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/PaginatedCampaigns" } }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "post": {
+        "operationId": "createCampaign",
+        "summary": "Create call campaign",
+        "description": "Creates a new outbound call campaign. Contacts can be provided as a CSV upload or imported from Google Sheets.",
+        "tags": ["Call Campaigns"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateCampaignRequest" },
+              "example": {
+                "name": "Q2 Renewal Outreach",
+                "agentId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+                "phoneNumberId": "pn_01j3m...",
+                "scheduledAt": "2026-05-01T09:00:00Z",
+                "timezone": "America/New_York"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Campaign created.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Campaign" } }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/v1/chat/analytics/calls/stats": {
+      "get": {
+        "operationId": "getCallStats",
+        "summary": "Get call stats",
+        "description": "Returns aggregated call statistics for your organization over a date range.",
+        "tags": ["Analytics"],
+        "parameters": [
+          {
+            "name": "startDate",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "format": "date", "example": "2026-04-01" }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "format": "date", "example": "2026-04-30" }
+          },
+          {
+            "name": "agentId",
+            "in": "query",
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Call statistics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "totalCalls": { "type": "integer" },
+                    "completedCalls": { "type": "integer" },
+                    "avgDurationSeconds": { "type": "number" },
+                    "successRate": { "type": "number", "description": "0–1" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/v1/chat/subscriptions/plans": {
+      "get": {
+        "operationId": "listPlans",
+        "summary": "List plans",
+        "description": "Returns available subscription plans with pricing and feature entitlements for your organization.",
+        "tags": ["Subscriptions"],
+        "responses": {
+          "200": {
+            "description": "List of plans.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/Plan" } }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/v1/chat/subscriptions/usage/current": {
+      "get": {
+        "operationId": "getCurrentUsage",
+        "summary": "Get current usage",
+        "description": "Returns usage metrics for the current billing cycle, including messages, voice minutes, and API calls.",
+        "tags": ["Subscriptions"],
+        "responses": {
+          "200": {
+            "description": "Current usage and quota.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CurrentUsage" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    }
+  },
   "components": {
     "securitySchemes": {
       "ApiKeyAuth": {
         "type": "apiKey",
         "in": "header",
-        "name": "x-api-key"
+        "name": "x-api-key",
+        "description": "Organization API key. Obtain from the [dashboard](https://app.agntix.ai/settings/api-keys). Format: `pk_live_…`"
       },
       "BearerAuth": {
         "type": "http",
         "scheme": "bearer",
-        "bearerFormat": "JWT"
+        "bearerFormat": "JWT",
+        "description": "Clerk-issued JWT. Use `Authorization: Bearer <token>`."
+      }
+    },
+    "responses": {
+      "Unauthorized": {
+        "description": "Missing or invalid authentication credentials.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" },
+            "example": {
+              "error": { "code": "UNAUTHORIZED", "message": "Authentication required.", "status": 401 },
+              "meta": { "requestId": "req_01j3m...", "timestamp": "2026-04-29T10:00:00Z" }
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Authenticated but not permitted to perform this action.",
+        "content": {
+          "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+        }
+      },
+      "NotFound": {
+        "description": "Resource not found.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" },
+            "example": {
+              "error": { "code": "NOT_FOUND", "message": "Agent not found.", "status": 404 },
+              "meta": { "requestId": "req_01j3m...", "timestamp": "2026-04-29T10:00:00Z" }
+            }
+          }
+        }
+      },
+      "BadRequest": {
+        "description": "Invalid request body or parameters.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" },
+            "example": {
+              "error": {
+                "code": "VALIDATION_ERROR",
+                "message": "fullName should not be empty",
+                "status": 400
+              },
+              "meta": { "requestId": "req_01j3m...", "timestamp": "2026-04-29T10:00:00Z" }
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": { "type": "string", "example": "NOT_FOUND" },
+              "message": { "type": "string", "example": "Resource not found." },
+              "status": { "type": "integer", "example": 404 }
+            }
+          },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "requestId": { "type": "string" },
+              "timestamp": { "type": "string", "format": "date-time" }
+            }
+          }
+        }
+      },
+      "Pagination": {
+        "type": "object",
+        "properties": {
+          "page": { "type": "integer", "example": 1 },
+          "limit": { "type": "integer", "example": 20 },
+          "total": { "type": "integer", "example": 47 },
+          "totalPages": { "type": "integer", "example": 3 }
+        }
+      },
+      "AgentTool": {
+        "type": "object",
+        "properties": {
+          "toolId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "UUID of an existing tool to attach.",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "toolDescription": {
+            "type": "string",
+            "description": "Optional context-specific description override for this agent."
+          }
+        },
+        "required": ["toolId"]
+      },
+      "CreateAgentRequest": {
+        "type": "object",
+        "required": ["fullName", "description", "role"],
+        "properties": {
+          "fullName": {
+            "type": "string",
+            "description": "Display name for the agent.",
+            "example": "Customer Support Bot"
+          },
+          "description": {
+            "type": "string",
+            "description": "Internal description of the agent's purpose.",
+            "example": "Handles tier-1 customer queries for Acme Inc."
+          },
+          "role": {
+            "type": "string",
+            "description": "The agent's persona and behavioral role. Used as the system prompt prefix.",
+            "example": "You are a helpful, concise support agent for Acme Inc."
+          },
+          "language": {
+            "type": "string",
+            "description": "BCP-47 language code. Controls TTS voice language selection.",
+            "example": "en"
+          },
+          "systemPrompt": {
+            "type": "string",
+            "description": "Additional system-level instructions appended to the role.",
+            "example": "You specialize in billing, returns, and account access. Keep responses under 3 sentences."
+          },
+          "specialInstructions": {
+            "type": "string",
+            "description": "Low-priority supplemental instructions (injected after system prompt)."
+          },
+          "modelId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "UUID of the LLM to use. Get IDs from `GET /v1/chat/models`."
+          },
+          "sttModelId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "UUID of the Speech-to-Text model (voice agents only)."
+          },
+          "ttsModelId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "UUID of the Text-to-Speech model (voice agents only)."
+          },
+          "voiceEnabled": {
+            "type": "boolean",
+            "default": false,
+            "description": "Enable voice capability. Requires `voicePipelineMode` when `true`."
+          },
+          "voicePipelineMode": {
+            "type": "string",
+            "enum": ["pipeline", "sts", "hybrid"],
+            "description": "Voice pipeline mode. `pipeline` = TTS+STT, `sts` = speech-to-speech, `hybrid` = adaptive."
+          },
+          "knowledgeStoreId": {
+            "type": "string",
+            "description": "ID of a knowledge store to attach for RAG-based answers."
+          },
+          "tools": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AgentTool" },
+            "description": "Tools to attach to the agent at creation time."
+          },
+          "welcomeAllowInterruptions": {
+            "type": "boolean",
+            "description": "Whether the welcome prompt can be interrupted by the user (voice only)."
+          }
+        }
+      },
+      "UpdateAgentRequest": {
+        "type": "object",
+        "description": "All fields are optional — only provided fields are updated.",
+        "properties": {
+          "fullName": { "type": "string" },
+          "description": { "type": "string" },
+          "role": { "type": "string" },
+          "language": { "type": "string" },
+          "systemPrompt": { "type": "string" },
+          "specialInstructions": { "type": "string" },
+          "modelId": { "type": "string", "format": "uuid" },
+          "voiceEnabled": { "type": "boolean" },
+          "voicePipelineMode": { "type": "string", "enum": ["pipeline", "sts", "hybrid"] },
+          "isActive": { "type": "boolean" },
+          "isPublic": { "type": "boolean" },
+          "tools": { "type": "array", "items": { "$ref": "#/components/schemas/AgentTool" } },
+          "subAgents": {
+            "type": "array",
+            "description": "Pass `[]` to remove all sub-agents.",
+            "items": { "type": "object" }
+          }
+        }
+      },
+      "Agent": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid", "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890" },
+          "fullName": { "type": "string", "example": "Customer Support Bot" },
+          "description": { "type": "string", "example": "Handles tier-1 customer queries" },
+          "role": { "type": "string", "example": "You are a helpful support agent for Acme Inc." },
+          "language": { "type": "string", "example": "en" },
+          "systemPrompt": { "type": "string" },
+          "voiceEnabled": { "type": "boolean", "example": false },
+          "voicePipelineMode": { "type": "string", "nullable": true },
+          "isActive": { "type": "boolean", "example": true },
+          "isPublic": { "type": "boolean", "example": false },
+          "orgId": { "type": "string", "example": "org_2abc123" },
+          "modelId": { "type": "string", "format": "uuid" },
+          "createdAt": { "type": "string", "format": "date-time", "example": "2026-04-28T11:42:11Z" },
+          "updatedAt": { "type": "string", "format": "date-time", "example": "2026-04-28T11:42:11Z" }
+        }
+      },
+      "AgentDetail": {
+        "allOf": [
+          { "$ref": "#/components/schemas/Agent" },
+          {
+            "type": "object",
+            "properties": {
+              "model": {
+                "type": "object",
+                "properties": {
+                  "id": { "type": "string", "format": "uuid" },
+                  "name": { "type": "string" },
+                  "provider": { "type": "string" }
+                }
+              },
+              "agentTools": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "tool": { "$ref": "#/components/schemas/Tool" }
+                  }
+                }
+              },
+              "agentKnowledgeStore": {
+                "type": "object",
+                "nullable": true,
+                "properties": {
+                  "id": { "type": "string" },
+                  "name": { "type": "string" }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "PaginatedAgents": {
+        "type": "object",
+        "properties": {
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/Agent" } },
+          "pagination": { "$ref": "#/components/schemas/Pagination" }
+        }
+      },
+      "CreateSessionRequest": {
+        "type": "object",
+        "required": ["agentId", "platform"],
+        "properties": {
+          "agentId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The agent to chat with.",
+            "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "platform": {
+            "type": "string",
+            "enum": ["SDK", "WEB", "WHATSAPP", "VOICE"],
+            "default": "SDK",
+            "description": "Originating platform. Affects session tagging and analytics."
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Arbitrary key-value pairs attached to the session (max 4096 characters total). Useful for storing user IDs, locale, etc."
+          },
+          "contact": {
+            "type": "object",
+            "description": "Contact information to associate with this session.",
+            "properties": {
+              "externalId": { "type": "string", "description": "Your CRM customer ID." },
+              "metadata": { "type": "object" },
+              "tags": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      },
+      "ChatSession": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "example": "ses_01j3m8xkqp8v2nw4f7g9hk0r" },
+          "agentId": { "type": "string", "format": "uuid" },
+          "platform": { "type": "string", "example": "SDK" },
+          "state": { "type": "string", "enum": ["OPEN", "CLOSED"], "example": "OPEN" },
+          "metadata": { "type": "object", "additionalProperties": true },
+          "orgId": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "PaginatedSessions": {
+        "type": "object",
+        "properties": {
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/ChatSession" } },
+          "pagination": { "$ref": "#/components/schemas/Pagination" }
+        }
+      },
+      "SendMessageRequest": {
+        "type": "object",
+        "required": ["content"],
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "The user's message.",
+            "example": "What is my current subscription plan?"
+          },
+          "stream": {
+            "type": "boolean",
+            "default": true,
+            "description": "Stream the response over SSE. Set `false` for a single JSON response."
+          }
+        }
+      },
+      "ChatMessage": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "example": "msg_01j3m..." },
+          "content": { "type": "string", "example": "Your current plan is Pro." },
+          "role": { "type": "string", "enum": ["USER", "ASSISTANT", "SYSTEM"], "example": "ASSISTANT" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "images": { "type": "array", "items": { "type": "string" }, "nullable": true },
+          "metadata": { "type": "object", "nullable": true }
+        }
+      },
+      "PaginatedMessages": {
+        "type": "object",
+        "properties": {
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/ChatMessage" } },
+          "pagination": { "$ref": "#/components/schemas/Pagination" }
+        }
+      },
+      "Voice": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "example": "21m00Tcm4TlvDq8ikWAM" },
+          "name": { "type": "string", "example": "Rachel" },
+          "provider": { "type": "string", "example": "elevenlabs" },
+          "language": { "type": "string", "example": "en" },
+          "gender": { "type": "string", "enum": ["male", "female", "neutral"] },
+          "previewUrl": { "type": "string", "format": "uri" }
+        }
+      },
+      "VoiceModel": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string", "example": "eleven_turbo_v2" },
+          "provider": { "type": "string", "example": "elevenlabs" },
+          "type": { "type": "string", "enum": ["TTS", "STT", "STS"] },
+          "isActive": { "type": "boolean" }
+        }
+      },
+      "CreateVoiceSessionRequest": {
+        "type": "object",
+        "required": ["agentId"],
+        "properties": {
+          "agentId": { "type": "string", "format": "uuid" },
+          "metadata": { "type": "object", "additionalProperties": true }
+        }
+      },
+      "VoiceSession": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "agentId": { "type": "string", "format": "uuid" },
+          "token": { "type": "string", "description": "LiveKit access token." },
+          "serverUrl": { "type": "string", "description": "LiveKit server WebSocket URL." },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "VoiceProvider": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string", "example": "ElevenLabs" },
+          "slug": { "type": "string", "example": "elevenlabs" },
+          "isActive": { "type": "boolean" }
+        }
+      },
+      "CreateToolRequest": {
+        "type": "object",
+        "required": ["name", "description", "type", "ajvPropertiesSchema"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_]*[a-zA-Z0-9]$",
+            "description": "Unique tool name. Alphanumeric with underscores, no leading/trailing underscore.",
+            "example": "GET_ACCOUNT_BALANCE"
+          },
+          "description": {
+            "type": "string",
+            "description": "Explains to the LLM what this tool does and when to call it.",
+            "example": "Retrieves the current account balance for the authenticated customer."
+          },
+          "type": {
+            "type": "string",
+            "enum": ["API_TOOL", "FUNCTION_TOOL"],
+            "description": "`API_TOOL` = HTTP webhook call. `FUNCTION_TOOL` = server-side function."
+          },
+          "apiTool": {
+            "type": "object",
+            "description": "Required when `type` is `API_TOOL`.",
+            "properties": {
+              "url": { "type": "string", "format": "uri" },
+              "method": { "type": "string", "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"] },
+              "headers": { "type": "object", "additionalProperties": { "type": "string" } },
+              "body": { "type": "object" }
+            },
+            "required": ["url", "method"]
+          },
+          "functionTool": {
+            "type": "object",
+            "description": "Required when `type` is `FUNCTION_TOOL`.",
+            "properties": {
+              "functionName": { "type": "string" }
+            }
+          },
+          "ajvPropertiesSchema": {
+            "type": "object",
+            "description": "JSON Schema for the tool's input parameters. The LLM uses this to construct the call.",
+            "example": {
+              "type": "object",
+              "properties": {
+                "customerId": { "type": "string", "description": "Customer ID" }
+              },
+              "required": ["customerId"]
+            }
+          },
+          "preExecutionMessage": {
+            "type": "string",
+            "description": "Message sent to the user before the tool executes (e.g. 'Let me look that up...')."
+          },
+          "metaData": { "type": "object" }
+        }
+      },
+      "UpdateToolRequest": {
+        "type": "object",
+        "description": "All fields optional — only provided fields are updated.",
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "apiTool": { "type": "object" },
+          "functionTool": { "type": "object" },
+          "ajvPropertiesSchema": { "type": "object" },
+          "preExecutionMessage": { "type": "string" }
+        }
+      },
+      "Tool": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string", "example": "GET_ACCOUNT_BALANCE" },
+          "description": { "type": "string" },
+          "type": { "type": "string", "enum": ["API_TOOL", "FUNCTION_TOOL"] },
+          "ajvPropertiesSchema": { "type": "object" },
+          "orgId": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "PaginatedTools": {
+        "type": "object",
+        "properties": {
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/Tool" } },
+          "pagination": { "$ref": "#/components/schemas/Pagination" }
+        }
+      },
+      "LLMModel": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string", "example": "gpt-4.1" },
+          "provider": { "type": "string", "example": "openai" },
+          "contextWindow": { "type": "integer", "example": 1000000 },
+          "isActive": { "type": "boolean" }
+        }
+      },
+      "PhoneNumber": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "number": { "type": "string", "example": "+15550001234" },
+          "provider": { "type": "string", "example": "twilio" },
+          "agentId": { "type": "string", "format": "uuid", "nullable": true },
+          "orgId": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "PaginatedPhoneNumbers": {
+        "type": "object",
+        "properties": {
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/PhoneNumber" } },
+          "pagination": { "$ref": "#/components/schemas/Pagination" }
+        }
+      },
+      "CreatePhoneNumberRequest": {
+        "type": "object",
+        "properties": {
+          "provider": { "type": "string", "enum": ["twilio", "telnyx"], "example": "twilio" },
+          "number": { "type": "string", "description": "E.164 format.", "example": "+15550001234" },
+          "agentId": { "type": "string", "format": "uuid", "description": "Optional agent to map immediately." }
+        }
+      },
+      "StartOutboundCallRequest": {
+        "type": "object",
+        "required": ["phoneNumberId", "to", "agentId"],
+        "properties": {
+          "phoneNumberId": { "type": "string" },
+          "to": { "type": "string", "description": "Destination number in E.164 format.", "example": "+15550001234" },
+          "agentId": { "type": "string", "format": "uuid" },
+          "metadata": { "type": "object" }
+        }
+      },
+      "ApiKey": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string", "example": "Production server key" },
+          "description": { "type": "string" },
+          "prefix": { "type": "string", "example": "pk_live_xxxxx" },
+          "isActive": { "type": "boolean" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "revokedAt": { "type": "string", "format": "date-time", "nullable": true }
+        }
+      },
+      "ApiKeyCreated": {
+        "allOf": [
+          { "$ref": "#/components/schemas/ApiKey" },
+          {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string",
+                "description": "The full API key value. Only returned at creation — store it securely.",
+                "example": "pk_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+              }
+            }
+          }
+        ]
+      },
+      "CreateApiKeyRequest": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string", "example": "Production server key" },
+          "description": { "type": "string" }
+        }
+      },
+      "Contact": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "externalId": { "type": "string", "nullable": true },
+          "name": { "type": "string", "nullable": true },
+          "phone": { "type": "string", "nullable": true },
+          "email": { "type": "string", "nullable": true },
+          "metadata": { "type": "object" },
+          "tags": { "type": "array", "items": { "type": "string" } },
+          "orgId": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "PaginatedContacts": {
+        "type": "object",
+        "properties": {
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/Contact" } },
+          "pagination": { "$ref": "#/components/schemas/Pagination" }
+        }
+      },
+      "CreateContactRequest": {
+        "type": "object",
+        "properties": {
+          "externalId": { "type": "string" },
+          "name": { "type": "string" },
+          "phone": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "metadata": { "type": "object" },
+          "tags": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "Campaign": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "agentId": { "type": "string", "format": "uuid" },
+          "phoneNumberId": { "type": "string" },
+          "status": { "type": "string", "enum": ["DRAFT", "SCHEDULED", "RUNNING", "COMPLETED", "PAUSED"] },
+          "scheduledAt": { "type": "string", "format": "date-time", "nullable": true },
+          "totalContacts": { "type": "integer" },
+          "completedCalls": { "type": "integer" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "PaginatedCampaigns": {
+        "type": "object",
+        "properties": {
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/Campaign" } },
+          "pagination": { "$ref": "#/components/schemas/Pagination" }
+        }
+      },
+      "CreateCampaignRequest": {
+        "type": "object",
+        "required": ["name", "agentId", "phoneNumberId"],
+        "properties": {
+          "name": { "type": "string" },
+          "agentId": { "type": "string", "format": "uuid" },
+          "phoneNumberId": { "type": "string" },
+          "scheduledAt": { "type": "string", "format": "date-time" },
+          "timezone": { "type": "string", "example": "America/New_York" }
+        }
+      },
+      "Plan": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string", "example": "Pro" },
+          "price": { "type": "number" },
+          "currency": { "type": "string", "example": "usd" },
+          "interval": { "type": "string", "enum": ["month", "year"] }
+        }
+      },
+      "CurrentUsage": {
+        "type": "object",
+        "properties": {
+          "periodStart": { "type": "string", "format": "date-time" },
+          "periodEnd": { "type": "string", "format": "date-time" },
+          "messages": { "type": "object", "properties": { "used": { "type": "integer" }, "limit": { "type": "integer" } } },
+          "voiceMinutes": { "type": "object", "properties": { "used": { "type": "number" }, "limit": { "type": "number" } } },
+          "apiCalls": { "type": "object", "properties": { "used": { "type": "integer" }, "limit": { "type": "integer" } } }
+        }
       }
     }
-  },
-  "security": [
-    { "ApiKeyAuth": [] }
-  ],
-  "tags": []
+  }
 }

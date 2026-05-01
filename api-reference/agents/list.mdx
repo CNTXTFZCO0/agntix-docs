@@ -1,0 +1,72 @@
+---
+title: "List Agents"
+openapi: "GET /v1/chat/agents"
+description: "Returns a paginated list of all agents in your organization."
+---
+
+import AuthCallout from "/snippets/auth-callout.mdx";
+
+<AuthCallout />
+
+## Code examples
+
+<CodeGroup>
+
+```bash curl
+curl https://api.agntix.ai/v1/chat/agents \
+  -H "x-api-key: pk_live_••••"
+```
+
+```bash curl (with filters)
+curl "https://api.agntix.ai/v1/chat/agents?page=1&limit=20&isActive=true&search=support" \
+  -H "x-api-key: pk_live_••••"
+```
+
+```javascript Node.js
+const res = await fetch('https://api.agntix.ai/v1/chat/agents?page=1&limit=20', {
+  headers: { 'x-api-key': 'pk_live_••••' },
+});
+const { data, pagination } = await res.json();
+console.log(`${pagination.total} agents found`);
+```
+
+```python Python
+import httpx
+
+resp = httpx.get(
+    "https://api.agntix.ai/v1/chat/agents",
+    headers={"x-api-key": "pk_live_••••"},
+    params={"page": 1, "limit": 20, "isActive": True},
+)
+result = resp.json()
+agents = result["data"]
+```
+
+</CodeGroup>
+
+## Sample response
+
+```json
+{
+  "data": [
+    {
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "fullName": "Customer Support Bot",
+      "description": "Handles tier-1 customer queries",
+      "language": "en",
+      "voiceEnabled": false,
+      "isActive": true,
+      "isPublic": false,
+      "orgId": "org_2abc123",
+      "createdAt": "2026-04-28T11:42:11Z",
+      "updatedAt": "2026-04-28T11:42:11Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 1,
+    "totalPages": 1
+  }
+}
+```

@@ -1,0 +1,145 @@
+---
+title: "Send Message"
+openapi: "POST /v1/chat/chat/sessions/{sessionId}/messages"
+description: "Send a user message and receive the agent's reply, optionally as a streaming SSE response."
+---
+
+import AuthCallout from "/snippets/auth-callout.mdx";
+
+<AuthCallout />
+
+## Streaming vs. non-streaming
+
+By default (`"stream": true`), the agent's reply is delivered as a [Server-Sent Events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events) stream. Set `"stream": false` to receive a single JSON response when you don't need incremental rendering.
+
+## Code examples
+
+<CodeGroup>
+
+```bash curl (streaming)
+curl -X POST https://api.agntix.ai/v1/chat/chat/sessions/ses_01j3m8xkqp8v2nw4f7g9hk0r/messages \
+  -H "x-api-key: pk_live_••••" \
+  -H "Content-Type: application/json" \
+  --no-buffer \
+  -d '{ "content": "What is my current subscription plan?", "stream": true }'
+```
+
+```bash curl (non-streaming)
+curl -X POST https://api.agntix.ai/v1/chat/chat/sessions/ses_01j3m8xkqp8v2nw4f7g9hk0r/messages \
+  -H "x-api-key: pk_live_••••" \
+  -H "Content-Type: application/json" \
+  -d '{ "content": "What is my current subscription plan?", "stream": false }'
+```
+
+```javascript Node.js (streaming)
+const sessionId = 'ses_01j3m8xkqp8v2nw4f7g9hk0r';
+
+const res = await fetch(
+  `https://api.agntix.ai/v1/chat/chat/sessions/${sessionId}/messages`,
+  {
+    method: 'POST',
+    headers: {
+      'x-api-key': 'pk_live_••••',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      content: 'What is my current subscription plan?',
+      stream: true,
+    }),
+  },
+);
+
+const reader = res.body.getReader();
+const decoder = new TextDecoder();
+let fullReply = '';
+
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+
+  const chunk = decoder.decode(value);
+  for (const line of chunk.split('\n')) {
+    if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+      const event = JSON.parse(line.slice(6));
+      fullReply += event.delta ?? '';
+      process.stdout.write(event.delta ?? '');
+    }
+  }
+}
+console.log('\nFull reply:', fullReply);
+```
+
+```javascript Node.js (non-streaming)
+const message = await fetch(
+  `https://api.agntix.ai/v1/chat/chat/sessions/${sessionId}/messages`,
+  {
+    method: 'POST',
+    headers: {
+      'x-api-key': 'pk_live_••••',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ content: 'What is my plan?', stream: false }),
+  },
+).then(r => r.json());
+
+console.log('Reply:', message.content);
+```
+
+```python Python (streaming)
+import httpx
+
+session_id = "ses_01j3m8xkqp8v2nw4f7g9hk0r"
+
+with httpx.stream(
+    "POST",
+    f"https://api.agntix.ai/v1/chat/chat/sessions/{session_id}/messages",
+    headers={"x-api-key": "pk_live_••••"},
+    json={"content": "What is my current subscription plan?", "stream": True},
+) as r:
+    for line in r.iter_lines():
+        if line.startswith("data: ") and line != "data: [DONE]":
+            import json
+            event = json.loads(line[6:])
+            print(event.get("delta", ""), end="", flush=True)
+```
+
+```python Python (non-streaming)
+import httpx
+
+session_id = "ses_01j3m8xkqp8v2nw4f7g9hk0r"
+
+message = httpx.post(
+    f"https://api.agntix.ai/v1/chat/chat/sessions/{session_id}/messages",
+    headers={"x-api-key": "pk_live_••••"},
+    json={"content": "What is my current subscription plan?", "stream": False},
+).json()
+
+print("Reply:", message["content"])
+```
+
+</CodeGroup>
+
+## SSE stream format
+
+When `stream: true`, the response is `Content-Type: text/event-stream`. Each event:
+
+```
+data: {"id":"msg_01j3m","delta":"Your "}
+
+data: {"id":"msg_01j3m","delta":"plan is Pro."}
+
+data: [DONE]
+```
+
+The stream ends with the literal `data: [DONE]` sentinel.
+
+## Non-streaming response
+
+```json
+{
+  "id": "msg_01j3m...",
+  "content": "Your current plan is Pro.",
+  "role": "ASSISTANT",
+  "createdAt": "2026-04-29T09:10:00Z"
+}
+```

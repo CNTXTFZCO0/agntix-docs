@@ -1,0 +1,59 @@
+---
+title: "Get Session"
+openapi: "GET /v1/chat/chat/sessions/{sessionId}"
+description: "Retrieve a single session by ID, including its current state and metadata."
+---
+
+import AuthCallout from "/snippets/auth-callout.mdx";
+
+<AuthCallout />
+
+## Code examples
+
+<CodeGroup>
+
+```bash curl
+curl https://api.agntix.ai/v1/chat/chat/sessions/ses_01j3m8xkqp8v2nw4f7g9hk0r \
+  -H "x-api-key: pk_live_••••"
+```
+
+```javascript Node.js
+const sessionId = 'ses_01j3m8xkqp8v2nw4f7g9hk0r';
+
+const session = await fetch(
+  `https://api.agntix.ai/v1/chat/chat/sessions/${sessionId}`,
+  { headers: { 'x-api-key': 'pk_live_••••' } },
+).then(r => r.json());
+
+console.log('State:', session.state);
+```
+
+```python Python
+import httpx
+
+session_id = "ses_01j3m8xkqp8v2nw4f7g9hk0r"
+
+session = httpx.get(
+    f"https://api.agntix.ai/v1/chat/chat/sessions/{session_id}",
+    headers={"x-api-key": "pk_live_••••"},
+).json()
+
+print("State:", session["state"])
+```
+
+</CodeGroup>
+
+## Sample response
+
+```json
+{
+  "id": "ses_01j3m8xkqp8v2nw4f7g9hk0r",
+  "agentId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "platform": "SDK",
+  "state": "OPEN",
+  "metadata": { "userId": "usr_123", "locale": "en-US" },
+  "orgId": "org_2abc123",
+  "createdAt": "2026-04-29T09:00:00Z",
+  "updatedAt": "2026-04-29T09:00:00Z"
+}
+```
