@@ -1,0 +1,52 @@
+---
+title: "Delete Tool"
+openapi: "DELETE /v1/chat/tools/{id}"
+description: "Permanently delete a tool and detach it from all agents."
+---
+
+import AuthCallout from "/snippets/auth-callout.mdx";
+
+<AuthCallout />
+
+<Warning>
+  Deleting a tool **automatically detaches it from all agents** that currently use it. The change takes effect on the next conversation turn. This action cannot be undone.
+</Warning>
+
+## Code examples
+
+<CodeGroup>
+
+```bash curl
+curl -X DELETE https://api.agntix.ai/v1/chat/tools/550e8400-e29b-41d4-a716-446655440000 \
+  -H "x-api-key: pk_live_••••"
+```
+
+```javascript Node.js
+const toolId = '550e8400-e29b-41d4-a716-446655440000';
+
+const res = await fetch(`https://api.agntix.ai/v1/chat/tools/${toolId}`, {
+  method: 'DELETE',
+  headers: { 'x-api-key': 'pk_live_••••' },
+});
+
+if (res.status === 204) {
+  console.log('Tool deleted successfully.');
+}
+```
+
+```python Python
+import httpx
+
+tool_id = "550e8400-e29b-41d4-a716-446655440000"
+
+response = httpx.delete(
+    f"https://api.agntix.ai/v1/chat/tools/{tool_id}",
+    headers={"x-api-key": "pk_live_••••"},
+)
+assert response.status_code == 204
+print("Tool deleted.")
+```
+
+</CodeGroup>
+
+A `204 No Content` response indicates the tool was successfully deleted.

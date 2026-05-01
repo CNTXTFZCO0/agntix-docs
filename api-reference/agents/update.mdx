@@ -1,0 +1,97 @@
+---
+title: "Update Agent"
+openapi: "PATCH /v2/chat/agents/{id}"
+description: "Partially update an agent. Only fields present in the request body are modified."
+---
+
+import AuthCallout from "/snippets/auth-callout.mdx";
+
+<AuthCallout />
+
+<Note>
+  Tool attachments are **replaced** on update, not merged. To add a tool, send the full list of desired `tools` including existing ones. Pass `"tools": []` to detach all tools.
+</Note>
+
+## Code examples
+
+<CodeGroup>
+
+```bash curl
+curl -X PATCH https://api.agntix.ai/v2/chat/agents/a1b2c3d4-e5f6-7890-abcd-ef1234567890 \
+  -H "x-api-key: pk_live_••••" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fullName": "Tier-1 Support — Updated",
+    "systemPrompt": "You specialize in billing, returns, and account access. Be brief and friendly.",
+    "isActive": true
+  }'
+```
+
+```javascript Node.js
+const agentId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+
+const res = await fetch(`https://api.agntix.ai/v2/chat/agents/${agentId}`, {
+  method: 'PATCH',
+  headers: {
+    'x-api-key': 'pk_live_••••',
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    systemPrompt: 'You specialize in billing, returns, and account access. Be brief.',
+    tools: [
+      { toolId: '550e8400-e29b-41d4-a716-446655440000' },
+      { toolId: '660e8400-e29b-41d4-a716-446655441111' },
+    ],
+  }),
+});
+const updated = await res.json();
+```
+
+```python Python
+import httpx
+
+agent_id = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+
+updated = httpx.patch(
+    f"https://api.agntix.ai/v2/chat/agents/{agent_id}",
+    headers={"x-api-key": "pk_live_••••"},
+    json={
+        "fullName": "Tier-1 Support — Updated",
+        "isActive": True,
+    },
+).json()
+```
+
+</CodeGroup>
+
+## Updating tools
+
+To attach a new tool without removing existing ones, first fetch the agent, then send the merged list:
+
+```javascript Node.js
+const agent = await fetch(`https://api.agntix.ai/v2/chat/agents/${id}`, {
+  headers: { 'x-api-key': 'pk_live_••••' },
+}).then(r => r.json());
+
+const existingToolIds = agent.agentTools.map(({ tool }) => ({ toolId: tool.id }));
+
+await fetch(`https://api.agntix.ai/v2/chat/agents/${id}`, {
+  method: 'PATCH',
+  headers: { 'x-api-key': 'pk_live_••••', 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    tools: [...existingToolIds, { toolId: 'new-tool-uuid' }],
+  }),
+});
+```
+
+## Sample response
+
+```json
+{
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "fullName": "Tier-1 Support — Updated",
+  "systemPrompt": "You specialize in billing, returns, and account access. Be brief and friendly.",
+  "isActive": true,
+  "updatedAt": "2026-04-29T09:30:00Z"
+}
+```

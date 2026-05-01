@@ -1,0 +1,77 @@
+---
+title: "Start Outbound Call"
+openapi: "POST /v1/chat/phone-numbers/outbound/call"
+description: "Initiate an outbound voice call from a provisioned number to a target phone number."
+---
+
+import AuthCallout from "/snippets/auth-callout.mdx";
+
+<AuthCallout />
+
+<Note>
+  The `agentId` must belong to a voice-enabled agent (`voiceEnabled: true`). The `phoneNumberId` must be a provisioned number in your organization.
+</Note>
+
+## Code examples
+
+<CodeGroup>
+
+```bash curl
+curl -X POST https://api.agntix.ai/v1/chat/phone-numbers/outbound/call \
+  -H "x-api-key: pk_live_••••" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "phoneNumberId": "pn_01j3m...",
+    "to": "+15550001234",
+    "agentId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "metadata": { "campaignId": "camp_01j3m" }
+  }'
+```
+
+```javascript Node.js
+const call = await fetch('https://api.agntix.ai/v1/chat/phone-numbers/outbound/call', {
+  method: 'POST',
+  headers: {
+    'x-api-key': 'pk_live_••••',
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    phoneNumberId: 'pn_01j3m...',
+    to: '+15550001234',
+    agentId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+    metadata: { campaignId: 'camp_01j3m' },
+  }),
+}).then(r => r.json());
+
+console.log('Call ID:', call.callId, '— Status:', call.status);
+```
+
+```python Python
+import httpx
+
+call = httpx.post(
+    "https://api.agntix.ai/v1/chat/phone-numbers/outbound/call",
+    headers={"x-api-key": "pk_live_••••"},
+    json={
+        "phoneNumberId": "pn_01j3m...",
+        "to": "+15550001234",
+        "agentId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "metadata": {"campaignId": "camp_01j3m"},
+    },
+).json()
+
+print(f"Call {call['callId']} — {call['status']}")
+```
+
+</CodeGroup>
+
+## Sample response
+
+```json
+{
+  "callId": "call_01j3m...",
+  "status": "INITIATED"
+}
+```
+
+For high-volume outbound calling, use [Call Campaigns](/api-reference/generated/create-campaign) instead — they manage retries, scheduling, and contact lists automatically.

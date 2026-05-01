@@ -134,10 +134,65 @@
             "pages": ["api-reference/introduction"]
           },
           {
-            "group": "API Reference",
+            "group": "Agents",
+            "pages": [
+              "api-reference/agents/overview",
+              "api-reference/agents/list",
+              "api-reference/agents/create",
+              "api-reference/agents/get",
+              "api-reference/agents/update",
+              "api-reference/agents/delete"
+            ]
+          },
+          {
+            "group": "Chat",
+            "pages": [
+              "api-reference/chat/overview",
+              "api-reference/chat/sessions/create",
+              "api-reference/chat/sessions/get",
+              "api-reference/chat/sessions/list",
+              "api-reference/chat/sessions/close",
+              "api-reference/chat/messages/send",
+              "api-reference/chat/messages/list"
+            ]
+          },
+          {
+            "group": "Voice",
+            "pages": [
+              "api-reference/voice/overview",
+              "api-reference/voice/voices",
+              "api-reference/voice/models",
+              "api-reference/voice/sessions-create",
+              "api-reference/voice/providers"
+            ]
+          },
+          {
+            "group": "Tools",
+            "pages": [
+              "api-reference/tools/overview",
+              "api-reference/tools/list",
+              "api-reference/tools/create",
+              "api-reference/tools/get",
+              "api-reference/tools/update",
+              "api-reference/tools/delete"
+            ]
+          },
+          {
+            "group": "Phone Numbers",
+            "pages": [
+              "api-reference/phone-numbers/list",
+              "api-reference/phone-numbers/create",
+              "api-reference/phone-numbers/outbound-call"
+            ]
+          },
+          {
+            "group": "More Resources",
             "openapi": {
               "source": "/openapi/agentix.json",
-              "directory": "api-reference"
+              "directory": "api-reference/generated",
+              "filter": {
+                "tags": ["Models", "Analytics", "API Keys", "Contacts", "Call Campaigns", "Subscriptions"]
+              }
             }
           }
         ]

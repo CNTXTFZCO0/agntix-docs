@@ -1,0 +1,72 @@
+---
+title: "Close Session"
+openapi: "PATCH /v1/chat/chat/sessions/{sessionId}/close"
+description: "Close an open session. No further messages can be sent after closing."
+---
+
+import AuthCallout from "/snippets/auth-callout.mdx";
+
+<AuthCallout />
+
+<Note>
+  Closing a session triggers `session.closed` webhooks if you have them configured. Closed sessions remain readable — you can still fetch messages and session details.
+</Note>
+
+## Code examples
+
+<CodeGroup>
+
+```bash curl
+curl -X PATCH https://api.agntix.ai/v1/chat/chat/sessions/ses_01j3m8xkqp8v2nw4f7g9hk0r/close \
+  -H "x-api-key: pk_live_••••" \
+  -H "Content-Type: application/json" \
+  -d '{ "reason": "RESOLVED" }'
+```
+
+```javascript Node.js
+const sessionId = 'ses_01j3m8xkqp8v2nw4f7g9hk0r';
+
+const session = await fetch(
+  `https://api.agntix.ai/v1/chat/chat/sessions/${sessionId}/close`,
+  {
+    method: 'PATCH',
+    headers: {
+      'x-api-key': 'pk_live_••••',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ reason: 'RESOLVED' }),
+  },
+).then(r => r.json());
+
+console.log('Session state:', session.state); // "CLOSED"
+```
+
+```python Python
+import httpx
+
+session_id = "ses_01j3m8xkqp8v2nw4f7g9hk0r"
+
+session = httpx.patch(
+    f"https://api.agntix.ai/v1/chat/chat/sessions/{session_id}/close",
+    headers={"x-api-key": "pk_live_••••"},
+    json={"reason": "RESOLVED"},
+).json()
+
+assert session["state"] == "CLOSED"
+```
+
+</CodeGroup>
+
+## Sample response
+
+```json
+{
+  "id": "ses_01j3m8xkqp8v2nw4f7g9hk0r",
+  "agentId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "platform": "SDK",
+  "state": "CLOSED",
+  "metadata": { "userId": "usr_123" },
+  "createdAt": "2026-04-29T09:00:00Z",
+  "updatedAt": "2026-04-29T09:45:00Z"
+}
+```

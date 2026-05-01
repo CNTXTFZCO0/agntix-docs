@@ -1,0 +1,68 @@
+---
+title: "List Voice Models"
+openapi: "GET /v1/voice/models"
+description: "Returns TTS, STT, and STS models available for voice-enabled agents."
+---
+
+import AuthCallout from "/snippets/auth-callout.mdx";
+
+<AuthCallout />
+
+## Code examples
+
+<CodeGroup>
+
+```bash curl
+curl "https://api.agntix.ai/v1/voice/models?type=TTS" \
+  -H "x-api-key: pk_live_••••"
+```
+
+```javascript Node.js
+const { data: models } = await fetch(
+  'https://api.agntix.ai/v1/voice/models',
+  { headers: { 'x-api-key': 'pk_live_••••' } },
+).then(r => r.json());
+
+const ttsModels = models.filter(m => m.type === 'TTS');
+console.log('TTS models:', ttsModels.map(m => m.name));
+```
+
+```python Python
+import httpx
+
+result = httpx.get(
+    "https://api.agntix.ai/v1/voice/models",
+    headers={"x-api-key": "pk_live_••••"},
+    params={"type": "TTS"},
+).json()
+
+for model in result["data"]:
+    print(f"{model['name']} — {model['provider']}")
+```
+
+</CodeGroup>
+
+## Sample response
+
+```json
+{
+  "data": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440001",
+      "name": "eleven_turbo_v2",
+      "provider": "elevenlabs",
+      "type": "TTS",
+      "isActive": true
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440002",
+      "name": "nova-2-general",
+      "provider": "deepgram",
+      "type": "STT",
+      "isActive": true
+    }
+  ]
+}
+```
+
+Use the model `id` as `sttModelId` or `ttsModelId` when [creating](/api-reference/agents/create) or [updating](/api-reference/agents/update) an agent.

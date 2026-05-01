@@ -1,0 +1,45 @@
+---
+title: "Agents"
+description: "Create and manage AI agents — the core building block of Agentix."
+---
+
+An **agent** encapsulates everything needed to run an AI assistant: a system prompt, an LLM, optional tools, an optional knowledge store, and an optional voice pipeline. You deploy agents across chat sessions, phone calls, and outbound call campaigns.
+
+<CardGroup cols={2}>
+  <Card title="Create an agent" icon="plus" href="/api-reference/agents/create">
+    Define a new agent with a persona, LLM, and optional tools.
+  </Card>
+  <Card title="List agents" icon="list" href="/api-reference/agents/list">
+    Paginate and search all agents in your organization.
+  </Card>
+  <Card title="Attach tools" icon="wrench" href="/api-reference/tools/overview">
+    Give your agent access to external APIs and server-side functions.
+  </Card>
+  <Card title="Enable voice" icon="microphone" href="/api-reference/voice/overview">
+    Add a TTS/STT pipeline for inbound and outbound phone calls.
+  </Card>
+</CardGroup>
+
+## Key concepts
+
+- **`modelId`** — selects the LLM powering the agent. Call [`GET /v1/chat/models`](/api-reference/generated/list-models) to list available models.
+- **`role`** — the core persona instruction. Combined with `systemPrompt` to form the full system message.
+- **`voiceEnabled`** — set to `true` and specify `voicePipelineMode` to enable voice calls.
+- **`tools`** — an array of `{ toolId }` objects. The LLM calls these autonomously based on the conversation.
+- **`subAgents`** — build multi-agent pipelines where the primary agent hands off to a specialized sub-agent.
+- **`knowledgeStoreId`** — attach a RAG knowledge store so the agent answers from your own content.
+
+## Agent lifecycle
+
+```
+Draft ──► Active ──► Inactive
+                 ├── assigned to phone number
+                 ├── used in chat sessions
+                 └── deployed in call campaigns
+```
+
+Set `isActive: false` to pause an agent without deleting it. Archived agents retain all session history.
+
+## Versioning
+
+The v2 endpoint (`/v2/chat/agents`) adds enriched sub-agent support and additional filter parameters. The v1 endpoint (`/v1/chat/agents`) remains available for listing but new agents should be created via v2.

@@ -1,0 +1,81 @@
+---
+title: "Update Tool"
+openapi: "PATCH /v1/chat/tools/{id}"
+description: "Partially update a tool. Changes take effect immediately on all agents using the tool."
+---
+
+import AuthCallout from "/snippets/auth-callout.mdx";
+
+<AuthCallout />
+
+<Note>
+  Changes to a tool's `ajvPropertiesSchema` or `description` are picked up on the **next conversation turn** — already-open sessions are not affected mid-conversation.
+</Note>
+
+## Code examples
+
+<CodeGroup>
+
+```bash curl
+curl -X PATCH https://api.agntix.ai/v1/chat/tools/550e8400-e29b-41d4-a716-446655440000 \
+  -H "x-api-key: pk_live_••••" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "description": "Retrieves the current account balance and pending transactions. Call when user asks about their balance, available credit, or recent charges.",
+    "ajvPropertiesSchema": {
+      "type": "object",
+      "properties": {
+        "customerId": { "type": "string", "description": "Customer ID" },
+        "includeTransactions": { "type": "boolean", "default": false, "description": "Include recent transactions" }
+      },
+      "required": ["customerId"]
+    }
+  }'
+```
+
+```javascript Node.js
+const toolId = '550e8400-e29b-41d4-a716-446655440000';
+
+const updated = await fetch(`https://api.agntix.ai/v1/chat/tools/${toolId}`, {
+  method: 'PATCH',
+  headers: {
+    'x-api-key': 'pk_live_••••',
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    description: 'Retrieves balance and pending transactions.',
+    preExecutionMessage: "Checking your balance and recent transactions...",
+  }),
+}).then(r => r.json());
+```
+
+```python Python
+import httpx
+
+tool_id = "550e8400-e29b-41d4-a716-446655440000"
+
+updated = httpx.patch(
+    f"https://api.agntix.ai/v1/chat/tools/{tool_id}",
+    headers={"x-api-key": "pk_live_••••"},
+    json={
+        "description": "Retrieves balance and pending transactions.",
+        "preExecutionMessage": "Checking your balance...",
+    },
+).json()
+```
+
+</CodeGroup>
+
+## Sample response
+
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "name": "GET_ACCOUNT_BALANCE",
+  "description": "Retrieves the current account balance and pending transactions.",
+  "type": "API_TOOL",
+  "orgId": "org_2abc123",
+  "createdAt": "2026-04-29T10:00:00Z",
+  "updatedAt": "2026-04-29T11:30:00Z"
+}
+```

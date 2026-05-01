@@ -1,0 +1,76 @@
+---
+title: "Get Agent"
+openapi: "GET /v2/chat/agents/{id}"
+description: "Retrieve a single agent by UUID, including its model, tools, and knowledge store."
+---
+
+import AuthCallout from "/snippets/auth-callout.mdx";
+
+<AuthCallout />
+
+## Code examples
+
+<CodeGroup>
+
+```bash curl
+curl https://api.agntix.ai/v2/chat/agents/a1b2c3d4-e5f6-7890-abcd-ef1234567890 \
+  -H "x-api-key: pk_live_••••"
+```
+
+```javascript Node.js
+const agentId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+
+const res = await fetch(`https://api.agntix.ai/v2/chat/agents/${agentId}`, {
+  headers: { 'x-api-key': 'pk_live_••••' },
+});
+const agent = await res.json();
+console.log('Tools attached:', agent.agentTools?.length ?? 0);
+```
+
+```python Python
+import httpx
+
+agent_id = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+
+agent = httpx.get(
+    f"https://api.agntix.ai/v2/chat/agents/{agent_id}",
+    headers={"x-api-key": "pk_live_••••"},
+).json()
+print("Model:", agent["model"]["name"])
+```
+
+</CodeGroup>
+
+## Sample response
+
+```json
+{
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "fullName": "Customer Support Bot",
+  "description": "Handles tier-1 customer queries",
+  "role": "You are a helpful, concise support agent for Acme Inc.",
+  "language": "en",
+  "systemPrompt": "You specialize in billing, returns, and account access.",
+  "voiceEnabled": false,
+  "isActive": true,
+  "isPublic": false,
+  "orgId": "org_2abc123",
+  "model": {
+    "id": "96f3b0a3-1234-5678-abcd-ef1234567890",
+    "name": "gpt-4.1",
+    "provider": "openai"
+  },
+  "agentTools": [
+    {
+      "tool": {
+        "id": "550e8400-e29b-41d4-a716-446655440000",
+        "name": "GET_ACCOUNT_BALANCE",
+        "description": "Retrieves the current account balance."
+      }
+    }
+  ],
+  "agentKnowledgeStore": null,
+  "createdAt": "2026-04-29T08:00:00Z",
+  "updatedAt": "2026-04-29T08:00:00Z"
+}
+```

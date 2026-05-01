@@ -1,0 +1,61 @@
+---
+title: "List Phone Numbers"
+openapi: "GET /v1/chat/phone-numbers"
+description: "Returns all phone numbers provisioned for your organization."
+---
+
+import AuthCallout from "/snippets/auth-callout.mdx";
+
+<AuthCallout />
+
+## Code examples
+
+<CodeGroup>
+
+```bash curl
+curl "https://api.agntix.ai/v1/chat/phone-numbers?page=1&limit=20" \
+  -H "x-api-key: pk_live_••••"
+```
+
+```javascript Node.js
+const { data: numbers } = await fetch(
+  'https://api.agntix.ai/v1/chat/phone-numbers',
+  { headers: { 'x-api-key': 'pk_live_••••' } },
+).then(r => r.json());
+
+for (const n of numbers) {
+  console.log(`${n.number} — agent: ${n.agentId ?? 'unassigned'}`);
+}
+```
+
+```python Python
+import httpx
+
+result = httpx.get(
+    "https://api.agntix.ai/v1/chat/phone-numbers",
+    headers={"x-api-key": "pk_live_••••"},
+).json()
+
+for n in result["data"]:
+    print(f"{n['number']} — {n.get('agentId', 'unassigned')}")
+```
+
+</CodeGroup>
+
+## Sample response
+
+```json
+{
+  "data": [
+    {
+      "id": "pn_01j3m...",
+      "number": "+15550001234",
+      "provider": "twilio",
+      "agentId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "orgId": "org_2abc123",
+      "createdAt": "2026-04-01T12:00:00Z"
+    }
+  ],
+  "pagination": { "page": 1, "limit": 20, "total": 1, "totalPages": 1 }
+}
+```

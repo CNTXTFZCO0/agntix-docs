@@ -1,0 +1,64 @@
+---
+title: "Tools"
+description: "Extend agent capabilities with API webhook tools and server-side function tools."
+---
+
+**Tools** let your agents take action in the real world. When the LLM decides a tool should be called, Agentix executes it and feeds the result back into the conversation.
+
+There are two tool types:
+
+| Type | Description |
+|---|---|
+| `API_TOOL` | Makes an HTTP request to your webhook URL. No code required. |
+| `FUNCTION_TOOL` | Calls a named server-side function registered in your backend. |
+
+<CardGroup cols={2}>
+  <Card title="Create a tool" icon="plus" href="/api-reference/tools/create">
+    Define a new API or function tool.
+  </Card>
+  <Card title="List tools" icon="list" href="/api-reference/tools/list">
+    Browse all tools in your organization.
+  </Card>
+  <Card title="Attach to an agent" icon="robot" href="/api-reference/agents/update">
+    Link a tool to an agent using PATCH /v2/chat/agents/{id}.
+  </Card>
+  <Card title="Test a tool" icon="flask" href="https://app.agntix.ai/tools">
+    Use the dashboard playground to test tools before attaching them.
+  </Card>
+</CardGroup>
+
+## Key concepts
+
+- **`name`** — the function name the LLM sees. Use UPPER_SNAKE_CASE for clarity (e.g. `GET_ACCOUNT_BALANCE`). Must be alphanumeric with underscores, no leading/trailing underscores.
+- **`description`** — tells the LLM *when* to call this tool. Be specific. The LLM uses this to decide whether to invoke the tool in a given context.
+- **`ajvPropertiesSchema`** — a JSON Schema object defining the tool's input parameters. The LLM constructs its call arguments based on this schema.
+- **`preExecutionMessage`** — an optional message spoken/sent to the user while the tool runs (e.g. *"Let me look that up for you..."*).
+
+## API tool example
+
+```json
+{
+  "name": "GET_ACCOUNT_BALANCE",
+  "description": "Retrieves the account balance for the authenticated customer. Call when the user asks about their balance, account funds, or available credit.",
+  "type": "API_TOOL",
+  "apiTool": {
+    "url": "https://api.acme.com/v1/accounts/{{customerId}}/balance",
+    "method": "GET",
+    "headers": { "Authorization": "Bearer {{apiKey}}" }
+  },
+  "ajvPropertiesSchema": {
+    "type": "object",
+    "properties": {
+      "customerId": {
+        "type": "string",
+        "description": "The customer's unique ID from the session metadata."
+      }
+    },
+    "required": ["customerId"]
+  }
+}
+```
+
+## Tools and agents
+
+A tool must be attached to an agent before it becomes available in conversations. Attach tools via the `tools` array in [Create Agent](/api-reference/agents/create) or [Update Agent](/api-reference/agents/update).

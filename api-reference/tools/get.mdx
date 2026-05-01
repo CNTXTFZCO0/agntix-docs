@@ -1,0 +1,67 @@
+---
+title: "Get Tool"
+openapi: "GET /v1/chat/tools/{id}"
+description: "Retrieve a single tool by UUID, including its schema and configuration."
+---
+
+import AuthCallout from "/snippets/auth-callout.mdx";
+
+<AuthCallout />
+
+## Code examples
+
+<CodeGroup>
+
+```bash curl
+curl https://api.agntix.ai/v1/chat/tools/550e8400-e29b-41d4-a716-446655440000 \
+  -H "x-api-key: pk_live_••••"
+```
+
+```javascript Node.js
+const toolId = '550e8400-e29b-41d4-a716-446655440000';
+
+const tool = await fetch(`https://api.agntix.ai/v1/chat/tools/${toolId}`, {
+  headers: { 'x-api-key': 'pk_live_••••' },
+}).then(r => r.json());
+
+console.log('Tool:', tool.name, '—', tool.description);
+```
+
+```python Python
+import httpx
+
+tool_id = "550e8400-e29b-41d4-a716-446655440000"
+
+tool = httpx.get(
+    f"https://api.agntix.ai/v1/chat/tools/{tool_id}",
+    headers={"x-api-key": "pk_live_••••"},
+).json()
+
+print(f"Tool: {tool['name']} — {tool['description']}")
+```
+
+</CodeGroup>
+
+## Sample response
+
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "name": "GET_ACCOUNT_BALANCE",
+  "description": "Retrieves the current account balance for a customer.",
+  "type": "API_TOOL",
+  "ajvPropertiesSchema": {
+    "type": "object",
+    "properties": {
+      "customerId": {
+        "type": "string",
+        "description": "The customer ID from the session metadata."
+      }
+    },
+    "required": ["customerId"]
+  },
+  "orgId": "org_2abc123",
+  "createdAt": "2026-04-29T10:00:00Z",
+  "updatedAt": "2026-04-29T10:00:00Z"
+}
+```

@@ -1,0 +1,70 @@
+---
+title: "List Voice Providers"
+openapi: "GET /v1/voice/providers"
+description: "Returns the voice providers configured and active for your organization."
+---
+
+import AuthCallout from "/snippets/auth-callout.mdx";
+
+<AuthCallout />
+
+## Code examples
+
+<CodeGroup>
+
+```bash curl
+curl https://api.agntix.ai/v1/voice/providers \
+  -H "x-api-key: pk_live_••••"
+```
+
+```javascript Node.js
+const { data: providers } = await fetch('https://api.agntix.ai/v1/voice/providers', {
+  headers: { 'x-api-key': 'pk_live_••••' },
+}).then(r => r.json());
+
+console.log('Active providers:', providers.map(p => p.name).join(', '));
+```
+
+```python Python
+import httpx
+
+result = httpx.get(
+    "https://api.agntix.ai/v1/voice/providers",
+    headers={"x-api-key": "pk_live_••••"},
+).json()
+
+for provider in result["data"]:
+    status = "active" if provider["isActive"] else "inactive"
+    print(f"{provider['name']} ({provider['slug']}) — {status}")
+```
+
+</CodeGroup>
+
+## Sample response
+
+```json
+{
+  "data": [
+    {
+      "id": "pvdr_elevenlabs",
+      "name": "ElevenLabs",
+      "slug": "elevenlabs",
+      "isActive": true
+    },
+    {
+      "id": "pvdr_deepgram",
+      "name": "Deepgram",
+      "slug": "deepgram",
+      "isActive": true
+    },
+    {
+      "id": "pvdr_azure",
+      "name": "Azure Cognitive Services",
+      "slug": "azure",
+      "isActive": false
+    }
+  ]
+}
+```
+
+Provider availability depends on your organization's subscription plan. Contact [support@agntix.ai](mailto:support@agntix.ai) to enable additional providers.
