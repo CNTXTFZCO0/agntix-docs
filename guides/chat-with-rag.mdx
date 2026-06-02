@@ -1,41 +1,142 @@
 ---
 title: "Chat with RAG"
-description: "Attach a knowledge store to an agent and answer questions from your own documents."
+description: "Ground an agent's answers in your own documents using an Agentix Knowledge Store."
 ---
 
-import AuthCallout from "/snippets/auth-callout.mdx";
+A **Knowledge Store** is a vector-indexed collection of your documents (PDFs, DOCX, CSV, or scraped websites). Once you attach a store to an agent, every user message triggers a retrieval pass — the most relevant chunks are pulled into the prompt and the agent answers from them, with citations. This guide walks you through creating a store, uploading content, and wiring it to an agent — entirely from the dashboard.
 
-<AuthCallout />
+## Prerequisites
 
-This guide assumes you have already built and tested a basic agent in [Build your first agent](/guides/build-your-first-agent).
+- A signed-in dashboard account at [app.agntix.ai](https://app.agntix.ai).
+- An existing agent (see [Build your first agent](/guides/build-your-first-agent)). You'll attach the store to it in Step 4.
+- The files you want to index (PDF, DOCX, or CSV), or a list of public URLs to scrape.
 
-## 1. Create a knowledge store
+## Step 1: Open the Knowledge Store page
+
+From the left navigation, click **Knowledge Store**. You'll land on a two-column layout — list of stores on the left, details for the selected store on the right.
+
+<Frame caption="The Knowledge Store page. Click the + button (top of the left panel) to create your first store.">
+  ![Empty Knowledge Store page](/images/guides/chat-with-rag/01-knowledge-store-empty.png)
+</Frame>
+
+Click the **+** button at the top of the left panel.
+
+## Step 2: Create the store
+
+A modal opens with a single required field — **Name**. Give the store a descriptive name (8–50 characters). Examples: *Help Center*, *Product Docs FY26*, *Onboarding playbook*.
+
+<Frame caption="Create Knowledge Store modal — name only. Embeddings, chunking, and the vector index are configured automatically.">
+  ![Create store modal](/images/guides/chat-with-rag/02-create-store-modal.png)
+</Frame>
+
+<Tip>
+  Keep stores **narrow**. Retrieval quality is much higher with one store per topic than one giant store containing everything your company has ever written. You can attach different stores to different agents.
+</Tip>
+
+Click **Create**. The new store appears in the left panel; select it to open the detail view.
+
+## Step 3: Upload documents
+
+In the store detail view, click the **Add** dropdown in the top right. Two sources are supported:
+
+- **Upload file** — PDF, DOCX, CSV (multiple files allowed in one upload).
+- **Add website** — scrape a single URL or a list of URLs.
+
+<Frame caption="Add dropdown — pick file upload or website scrape.">
+  ![Add dropdown](/images/guides/chat-with-rag/03-upload-document-dropdown.png)
+</Frame>
+
+Select **Upload file** and pick one or more documents. Each file is queued and processed asynchronously:
+
+1. **Uploading** — bytes transfer to the gateway.
+2. **Processing** — Agentix chunks the document (~1k tokens per chunk), embeds it (Cohere by default), and writes vectors to Qdrant.
+3. **Ready** — the document is searchable.
+
+<Frame caption="Upload progress. Status badges flip from Uploading → Processing → Ready.">
+  ![Upload in progress](/images/guides/chat-with-rag/04-upload-progress.png)
+</Frame>
+
+Wait for every document to reach **Ready** before testing. Processing time scales with document size (typical: 1–2 seconds per page).
+
+<Frame caption="Documents ready for retrieval.">
+  ![Documents ready](/images/guides/chat-with-rag/05-document-ready.png)
+</Frame>
+
+## Step 4: Attach the store to an agent
+
+Open your agent at `/agents/{id}`. On the right column, switch to the **Knowledge** tab (it's the book icon).
+
+1. Pick your store from the **Select Knowledge Base** dropdown.
+2. Adjust retrieval knobs as needed:
+   - **Search Type** — vector / hybrid / keyword. *Hybrid* is the safest default.
+   - **Top K** — how many chunks to retrieve (range 1–100; default ~6). Higher = more context, higher cost.
+   - **Top N** — how many chunks to keep after reranking (must be ≤ Top K).
+   - **Agentic RAG** — when on, the agent rewrites the user's question into a better retrieval query before searching. Slower but higher recall on conversational follow-ups.
+   - **Rerank** — runs Cohere's reranker over the Top K results. Adds ~150 ms; significantly cuts hallucinations.
+
+<Frame caption="Knowledge tab on the agent detail page. Top K / Top N sliders control retrieval breadth and depth.">
+  ![Attach knowledge to agent](/images/guides/chat-with-rag/06-agent-attach-knowledge.png)
+</Frame>
+
+Click **Save Changes** in the page header.
+
+## Step 5: Test with a RAG-grounded question
+
+Click **Test Agent** in the page header. Ask a question whose answer is in your uploaded documents — something specific enough that a generic LLM wouldn't know it.
+
+<Frame caption="The agent answers from the knowledge store. Source snippets are shown inline (or in the response payload for API users).">
+  ![Test RAG response](/images/guides/chat-with-rag/07-test-rag-response.png)
+</Frame>
+
+Compare against the same question with the store *detached* — the difference should be obvious. If the agent ignores the store, see [Troubleshooting](#troubleshooting) below.
+
+## Verify it works
+
+- Every uploaded document shows **Ready** in the store detail view.
+- The agent's Knowledge tab shows the store selected after saving.
+- Test Agent answers contain facts that are only in your documents.
+- The session log (Analytics tab or `/logs-history`) shows the retrieved chunks per message.
+
+## Best practices
+
+<CardGroup cols={2}>
+  <Card title="One topic per store" icon="layer-group">
+    Narrow stores out-perform giant stores. Split by product, region, or audience.
+  </Card>
+  <Card title="Refresh on a schedule" icon="rotate">
+    Re-upload changed documents. Old chunks are replaced atomically, no downtime.
+  </Card>
+  <Card title="Always rerank" icon="wand-magic-sparkles">
+    Cohere reranking adds ~150 ms but cuts hallucinations dramatically.
+  </Card>
+  <Card title="Cite sources in the prompt" icon="quote-left">
+    Tell the agent to cite chunk titles. Builds user trust and makes wrong answers easy to debug.
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| Agent ignores the store | Document still **Processing**, or store not saved on the agent | Wait for **Ready**, then re-save the agent |
+| Wrong document retrieved | **Top K** too low, or two stores overlap | Raise Top K to 8–10, or split overlapping content |
+| Slow responses | Rerank + Agentic RAG both on | Turn off Agentic RAG first; keep rerank |
+| "Quota exceeded" upload error | Org embedding quota | Contact support; quotas are per-plan |
+
+## API alternative
+
+Same flow over HTTP — useful for CI / bulk ingestion / nightly refreshes:
 
 ```bash
 curl -X POST https://api.agntix.ai/v1/chat/knowledge-store \
   -H "x-api-key: $AGNTIX_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{ "name": "Help Center", "description": "Customer-facing help center articles" }'
-```
 
-## 2. Upload documents
-
-Upload PDFs, Markdown, or HTML; Agentix chunks, embeds, and indexes them. See the [Knowledge Stores API reference](/api-reference/knowledge-store) for the upload endpoint and supported MIME types.
-
-## 3. Attach the store to an agent
-
-```bash
 curl -X PATCH https://api.agntix.ai/v1/chat/agents/$AGENT_ID \
   -H "x-api-key: $AGNTIX_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{ "config": { "ragEnabled": true, "knowledgeStoreId": "ks_…" } }'
 ```
 
-## 4. Ask a question
-
-Send a message in a session created against the agent. The agent will retrieve top-K chunks from the knowledge store, inject them into the prompt, and answer with citations.
-
-<Tip>
-  Tune retrieval quality by enabling Cohere reranking on the agent's config. The default top-K is 2;
-  raise it to 4–6 for sparse corpora.
-</Tip>
+For the full upload, document-listing, and chunk-level endpoints, see the auto-generated **Knowledge Store** section under [API Reference](/api-reference/introduction).

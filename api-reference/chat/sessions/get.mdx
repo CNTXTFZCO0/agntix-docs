@@ -1,44 +1,51 @@
 ---
 title: "Get Session"
-openapi: "GET /v1/chat/chat/sessions/{sessionId}"
-description: "Retrieve a single session by ID, including its current state and metadata."
+openapi: "GET /api/v1/chat/sessions/{sessionId}"
+description: "Retrieve a single session by ID, including telephony metadata, echoed session variables, and the full post-call analysis block."
 ---
 
 import AuthCallout from "/snippets/auth-callout.mdx";
 
 <AuthCallout />
 
+Returns session-level fields (durations, telephony metadata, recording URL) plus the same `analysis` block that ships with the [`session.ended`](/webhooks/events) webhook — useful when you need to pull on demand instead of waiting for the webhook.
+
+For the turn-by-turn transcript, see [List Messages](/api-reference/chat/messages/list).
+
 ## Code examples
 
 <CodeGroup>
 
-```bash curl
-curl https://api.agntix.ai/v1/chat/chat/sessions/ses_01j3m8xkqp8v2nw4f7g9hk0r \
-  -H "x-api-key: pk_live_••••"
+```bash cURL
+curl https://api.agntix.ai/api/v1/chat/sessions/$SESSION_ID \
+  -H "x-api-key: $AGNTIX_API_KEY" \
+  -H "Accept: application/json"
 ```
 
 ```javascript Node.js
-const sessionId = 'ses_01j3m8xkqp8v2nw4f7g9hk0r';
+const sessionId = "4981804c-2658-4893-84ff-9c2fa90fb3c2";
 
 const session = await fetch(
-  `https://api.agntix.ai/v1/chat/chat/sessions/${sessionId}`,
-  { headers: { 'x-api-key': 'pk_live_••••' } },
-).then(r => r.json());
+  `https://api.agntix.ai/api/v1/chat/sessions/${sessionId}`,
+  { headers: { "x-api-key": process.env.AGNTIX_API_KEY } },
+).then((r) => r.json());
 
-console.log('State:', session.state);
+console.log("State:", session.state);
+console.log("Resolution:", session.analysis?.resolution?.classification);
 ```
 
 ```python Python
-import httpx
+import os, requests
 
-session_id = "ses_01j3m8xkqp8v2nw4f7g9hk0r"
+session_id = "4981804c-2658-4893-84ff-9c2fa90fb3c2"
 
-session = httpx.get(
-    f"https://api.agntix.ai/v1/chat/chat/sessions/{session_id}",
-    headers={"x-api-key": "pk_live_••••"},
+session = requests.get(
+    f"https://api.agntix.ai/api/v1/chat/sessions/{session_id}",
+    headers={"x-api-key": os.environ["AGNTIX_API_KEY"]},
 ).json()
 
 print("State:", session["state"])
+print("Resolution:", session.get("analysis", {}).get("resolution", {}).get("classification"))
 ```
 
 </CodeGroup>
@@ -47,13 +54,61 @@ print("State:", session["state"])
 
 ```json
 {
-  "id": "ses_01j3m8xkqp8v2nw4f7g9hk0r",
-  "agentId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-  "platform": "SDK",
-  "state": "OPEN",
-  "metadata": { "userId": "usr_123", "locale": "en-US" },
-  "orgId": "org_2abc123",
-  "createdAt": "2026-04-29T09:00:00Z",
-  "updatedAt": "2026-04-29T09:00:00Z"
+  "id": "4981804c-2658-4893-84ff-9c2fa90fb3c2",
+  "type": "VOICE",
+  "platform": "PHONE",
+  "direction": "OUTBOUND",
+  "state": "CLOSED",
+  "agentId": "40235145-aa3d-443e-9d0c-841dd0716a2f",
+  "createdAt": "2026-04-08T05:00:01.130Z",
+  "lastActivityAt": "2026-04-08T05:00:01.130Z",
+  "endedAt": "2026-04-08T05:00:10.546Z",
+  "updatedAt": "2026-04-08T05:00:01.130Z",
+  "metadata": {
+    "customerPhoneNumber": "+971501234567",
+    "roomName": "outbound_sip_40235145-aa3d-443e-9d0c-841dd0716a2f^__^7yoamyb",
+    "sessionVariables": {
+      "crmContactId": "CRM-7728",
+      "customerName": "Alex Morgan"
+    }
+  },
+  "analysis": {
+    "summary": "Customer confirmed delivery slot for Wednesday afternoon.",
+    "intent": {
+      "conversation": {
+        "intent": "Slot-Confirmed",
+        "confidence": 0.92,
+        "explanation": "Customer agreed to Wednesday afternoon delivery."
+      },
+      "message": { "intent": null, "confidence": 0, "explanation": "…" }
+    },
+    "resolution": {
+      "classification": "RESOLVED",
+      "confidenceScore": 0.88,
+      "status": "Completed",
+      "satisfiedChecklistItems": ["delivery_slot_agreed"],
+      "evidence": ["Customer: yes Wednesday afternoon works."],
+      "explanation": "Customer agreed to a specific slot."
+    },
+    "sentiment": {
+      "conversation": {
+        "sentiment": "POSITIVE",
+        "score": 0.4,
+        "detectedLanguage": "en",
+        "explanation": "Customer was cooperative throughout."
+      },
+      "message": { "sentiment": null, "score": 0, "detectedLanguage": "N/A", "explanation": "…" }
+    },
+    "extractedData": {
+      "slotConfirmed": true,
+      "preferredDay": "Wednesday",
+      "preferredTimeWindow": "Afternoon",
+      "callbackRequested": false,
+      "callOutcome": "Confirmed"
+    }
+  },
+  "recordingUrl": "https://app.agntix.ai/en/logs-history?opened=4981804c-2658-4893-84ff-9c2fa90fb3c2"
 }
 ```
+
+See [Post-call analysis](/guides/post-call-analysis) for the meaning of each field in the `analysis` block.

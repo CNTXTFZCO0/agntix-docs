@@ -1,33 +1,141 @@
 ---
 title: "Build your first agent"
-description: "End-to-end walkthrough: configure an agent, send messages, stream the response, then add a tool."
+description: "Create, configure, and test an Agentix AI agent from the dashboard in about five minutes."
 ---
 
-import AuthCallout from "/snippets/auth-callout.mdx";
+An **agent** in Agentix is a configurable assistant — a model + a system prompt + an optional voice + optional tools and knowledge. This guide walks you through creating one in the dashboard, talking to it from the built-in test panel, and (optionally) attaching it to a knowledge store or tool.
 
-By the end of this guide you'll have a working agent that:
+## Prerequisites
 
-1. Holds a conversation grounded in a system prompt.
-2. Streams its response token-by-token.
-3. Calls a tool (your own HTTP endpoint) when asked.
+- A signed-in dashboard account at [app.agntix.ai](https://app.agntix.ai). Sign up takes about 30 seconds; the default plan includes enough free quota to finish this guide.
+- Admin role on your organization (Member accounts can view agents but not create them).
 
-It assumes you've already finished the [Quickstart](/quickstart).
+## Step 1: Open the Agents page
 
-<AuthCallout />
+From the left navigation, click **Agents**. You'll land on `/agents`, which lists every agent in your organization. New organizations start empty.
 
-## 1. Pick a model
+<Frame caption="The Agents page. Click + Create Agent in the top right to start.">
+  ![Empty Agents list](/images/guides/build-your-first-agent/01-agents-list-empty.png)
+</Frame>
 
-`GET /v1/chat/models` lists everything your org can use today. For most chat use cases, start with
-`gpt-4o-mini` — fast, cheap, capable.
+Click **+ Create Agent** to open the four-step creation wizard.
 
-```bash
-curl https://api.agntix.ai/v1/chat/models?type=text-to-text \
-  -H "x-api-key: $AGNTIX_API_KEY"
+## Step 2: Pick a starting template
+
+The wizard opens on **Step 1 — Templates**. You have two options:
+
+- **Blank Template** — start from scratch (recommended if you have a specific use case in mind).
+- **Templates carousel** — pre-built starting points like *Support Agent*, *Customer Service Agent*, *Banking Assistant*, *Appointment Setter*, or *Meeting Summarizer*. Each template pre-fills the system prompt and basic settings; you can edit everything afterwards.
+
+<Frame caption="Step 1 of the Create Agent wizard.">
+  ![Template picker](/images/guides/build-your-first-agent/02-create-step1-template.png)
+</Frame>
+
+For this guide, click the **Blank Template** card. The wizard advances to Step 2.
+
+## Step 3: Fill in general settings
+
+**Step 2 — General Settings** captures the basics:
+
+1. **Voice Enabled** — leave off for a chat-only agent; turn on if you want the agent to make/receive phone calls. (You can flip this later — see [Voice calls](/guides/voice-calls).)
+2. **Name** — at least 5 characters. Shown in lists, logs, and webhooks.
+3. **Language** — primary language for the agent. Determines which TTS/STT models and voices are offered later.
+4. **Role** — one-line summary of what the agent does (e.g. *Order-status assistant*).
+5. **Description** — longer description; visible in the dashboard and analytics.
+
+<Frame caption="General Settings — keep these short. The Role and Description help your teammates find this agent later; they aren't sent to the LLM.">
+  ![General Settings form](/images/guides/build-your-first-agent/03-create-step2-general.png)
+</Frame>
+
+Click **Next**.
+
+## Step 4: Write the system prompt
+
+**Step 3 — System Prompt** is the most important step. The system prompt defines persona, tone, scope, and guardrails.
+
+A good starter prompt for the order-status example:
+
+```text
+You help customers track their orders. Be concise and friendly.
+- Ask for the order number if the user doesn't provide one.
+- Never invent order status. If you don't have data, say so.
+- If the user asks anything unrelated to orders, politely redirect.
 ```
 
-## 2. Create the agent
+<Frame caption="System prompt editor. Use the expand icon (top right of the textarea) to open the full-screen editor for longer prompts.">
+  ![System Prompt step](/images/guides/build-your-first-agent/04-create-step3-prompt.png)
+</Frame>
 
-System prompts matter more than any other knob. Be explicit about persona, tone, and what *not* to do.
+Click **Next**.
+
+## Step 5: (Optional) Attach knowledge and tools
+
+**Step 4 — Knowledge & Tools** lets you optionally attach:
+
+- **Knowledge Base** — a previously-created knowledge store the agent will retrieve from. Skip for now if you don't have one; see [Chat with RAG](/guides/chat-with-rag) for how to create one.
+- **Tools** — function/API tools the agent can invoke during a conversation. Skip for now; see [Tools](/guides/tools).
+
+<Frame caption="Knowledge & Tools — both fields are optional. You can attach or detach at any time from the agent's detail page.">
+  ![Knowledge and Tools step](/images/guides/build-your-first-agent/05-create-step4-attach.png)
+</Frame>
+
+Click **Create Agent**. You'll be redirected to `/agents/{id}` — the agent detail / edit page.
+
+## Step 6: Test the agent
+
+The detail page has two columns:
+
+- **Left** — system prompt, model, and language. Edit any of these and click **Save Changes** in the top right.
+- **Right** — tabs for **Calls**, **Chat**, **Functions**, **Multi-agents**, **Analytics**, **Widgets**. Each tab configures one slice of the agent.
+
+In the header you'll see a green **Test Agent** button.
+
+<Frame caption="Agent detail page. Click Test Agent (green button, top right) to start a live conversation.">
+  ![Agent detail overview](/images/guides/build-your-first-agent/06-agent-detail-overview.png)
+</Frame>
+
+Click **Test Agent**. A LiveKit voice room or chat panel opens (depending on the **Voice Enabled** toggle). Type or speak a question your prompt should handle — e.g. *"What's the status of my order 1234?"* — and verify the agent stays in character.
+
+<Frame caption="Close-up of the Test Agent button in the page header.">
+  ![Test Agent button](/images/guides/build-your-first-agent/07-agent-test-call-button.png)
+</Frame>
+
+If you also want to share the agent without giving testers dashboard access, use the two small icons next to **Test Agent**:
+
+- **Phone icon** — opens the SDK voice demo for this agent.
+- **Speech-bubble icon** — opens the SDK chat demo for this agent.
+
+Both URLs are shareable.
+
+## Verify it works
+
+Your agent is wired up if all of the following are true:
+
+- It appears at `/agents` with the correct name and **Updated At** timestamp.
+- Clicking **Test Agent** opens a working test panel without errors.
+- The agent's replies follow the system prompt (correct persona, refuses out-of-scope questions).
+- The **Analytics** tab on the detail page starts collecting session data after your first test.
+
+## Common next steps
+
+<CardGroup cols={2}>
+  <Card title="Add knowledge (RAG)" icon="database" href="/guides/chat-with-rag">
+    Ground the agent's answers in your own documents.
+  </Card>
+  <Card title="Enable voice" icon="phone" href="/guides/voice-calls">
+    Same agent — now over the browser or PSTN.
+  </Card>
+  <Card title="Give it tools" icon="wrench" href="/guides/tools">
+    Let the agent call your APIs and built-in functions.
+  </Card>
+  <Card title="Subscribe to webhooks" icon="bolt" href="/webhooks/overview">
+    Push session lifecycle events to your back-office.
+  </Card>
+</CardGroup>
+
+## API alternative
+
+If you'd rather create the agent over HTTP — for CI, scripts, or back-office tooling — every step above maps directly to the [Agents API](/api-reference/agents/create). The end-to-end curl flow is documented in the [Quickstart](/quickstart):
 
 ```bash
 curl https://api.agntix.ai/v1/chat/agents \
@@ -36,168 +144,9 @@ curl https://api.agntix.ai/v1/chat/agents \
   -d '{
     "name": "Order Status Bot",
     "modelId": "gpt-4o-mini",
-    "systemPrompt": "You help customers track their orders. Be concise and friendly. If the user asks anything unrelated to orders, politely redirect them.",
-    "config": {
-      "temperature": 0.3,
-      "maxOutputTokens": 200
-    }
+    "systemPrompt": "You help customers track their orders. Be concise and friendly.",
+    "config": { "temperature": 0.3, "maxOutputTokens": 200 }
   }'
 ```
 
-Save the returned `id` as `AGENT_ID`.
-
-## 3. Open a session
-
-A session is the long-lived container for a single user conversation. It tracks message history,
-analytics, and tool calls.
-
-```bash
-SESSION=$(curl -s https://api.agntix.ai/v1/chat/chat/sessions \
-  -H "x-api-key: $AGNTIX_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d "{\"agentId\": \"$AGENT_ID\", \"userId\": \"customer-123\"}" | jq -r .id)
-```
-
-The `userId` is yours to choose — Agentix uses it for analytics and message grouping. It does not
-need to map to a user in our system.
-
-## 4. Send a non-streaming message
-
-For background jobs or chatbots that don't need to stream:
-
-```bash
-curl https://api.agntix.ai/v1/chat/chat/sessions/$SESSION/messages \
-  -H "x-api-key: $AGNTIX_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"content": "Where is my order #1234?"}'
-```
-
-The response is a complete `MessageResponse` object including the assistant's reply.
-
-## 5. Stream a message
-
-For UIs, switch to streaming. The `stream=true` query param flips the response to text/event-stream:
-
-<CodeGroup>
-
-```bash cURL
-curl -N "https://api.agntix.ai/v1/chat/chat/sessions/$SESSION/messages?stream=true" \
-  -H "x-api-key: $AGNTIX_API_KEY" \
-  -H "Content-Type: application/json" \
-  -H "Accept: text/event-stream" \
-  -d '{"content": "Where is my order #1234?"}'
-```
-
-```javascript Node
-const res = await fetch(
-  `https://api.agntix.ai/v1/chat/chat/sessions/${SESSION}/messages?stream=true`,
-  {
-    method: "POST",
-    headers: {
-      "x-api-key": process.env.AGNTIX_API_KEY,
-      "Content-Type": "application/json",
-      Accept: "text/event-stream",
-    },
-    body: JSON.stringify({ content: "Where is my order #1234?" }),
-  }
-);
-
-const reader = res.body.getReader();
-const decoder = new TextDecoder();
-while (true) {
-  const { value, done } = await reader.read();
-  if (done) break;
-  process.stdout.write(decoder.decode(value));
-}
-```
-
-```python Python
-with httpx.stream(
-    "POST",
-    f"https://api.agntix.ai/v1/chat/chat/sessions/{SESSION}/messages?stream=true",
-    headers={
-        "x-api-key": os.environ["AGNTIX_API_KEY"],
-        "Accept": "text/event-stream",
-    },
-    json={"content": "Where is my order #1234?"},
-) as r:
-    for line in r.iter_lines():
-        print(line)
-```
-
-</CodeGroup>
-
-You'll receive `delta` events with token chunks, then a `done` event when the assistant finishes.
-
-## 6. Add a tool
-
-Now make the agent actually look up real orders. We'll register an API tool that hits your backend:
-
-```bash
-TOOL=$(curl -s https://api.agntix.ai/v1/chat/tools \
-  -H "x-api-key: $AGNTIX_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "lookup_order_status",
-    "description": "Look up the current status of an order by its number.",
-    "type": "API",
-    "config": {
-      "url": "https://your-backend.example.com/orders/{orderNumber}/status",
-      "method": "GET",
-      "headers": { "Authorization": "Bearer YOUR_BACKEND_TOKEN" },
-      "parameters": {
-        "type": "object",
-        "properties": { "orderNumber": { "type": "string", "description": "The order number to look up." } },
-        "required": ["orderNumber"]
-      }
-    }
-  }' | jq -r .id)
-```
-
-Attach it to the agent:
-
-```bash
-curl -X PATCH https://api.agntix.ai/v1/chat/agents/$AGENT_ID \
-  -H "x-api-key: $AGNTIX_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d "{\"config\": {\"toolsEnabled\": true, \"toolIds\": [\"$TOOL\"]}}"
-```
-
-## 7. Verify the tool fires
-
-Send a message that should trigger the tool:
-
-```bash
-curl https://api.agntix.ai/v1/chat/chat/sessions/$SESSION/messages \
-  -H "x-api-key: $AGNTIX_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"content": "What is the status of order 1234?"}'
-```
-
-In the response you'll see a `TOOL` message with the call payload, then the assistant's final reply
-that incorporates the tool's result.
-
-You can also subscribe to [streaming events](/guides/streaming-events) to watch the tool calls in
-real time:
-
-```text
-event: tool_call
-data: { "toolName": "lookup_order_status", "args": { "orderNumber": "1234" } }
-```
-
-## What's next
-
-<CardGroup cols={2}>
-  <Card title="Add RAG" icon="database" href="/guides/chat-with-rag">
-    Ground answers in your own documents.
-  </Card>
-  <Card title="Add voice" icon="phone" href="/guides/voice-calls">
-    Same agent, now speaking — over the browser or PSTN.
-  </Card>
-  <Card title="Subscribe to webhooks" icon="bolt" href="/webhooks/overview">
-    Push session lifecycle events to your back-office.
-  </Card>
-  <Card title="Production checklist" icon="circle-check" href="/guides/rate-limits">
-    Rate limits, retries, error handling.
-  </Card>
-</CardGroup>
+See the full multi-step API flow (open a session, stream a message, attach a tool) in the [Quickstart](/quickstart) and the [Agents API reference](/api-reference/agents/create).

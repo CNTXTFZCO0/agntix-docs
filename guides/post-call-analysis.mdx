@@ -1,0 +1,200 @@
+---
+title: "Post-call analysis"
+description: "Configure intent, resolution, sentiment, and structured data extraction so each call returns rich, structured fields — not raw transcript."
+---
+
+import AuthCallout from "/snippets/auth-callout.mdx";
+
+<AuthCallout />
+
+Once a call ends, Agentix runs an analysis pass over the transcript. Configure what to extract on the agent's **Analytics tab** — open any agent from **Agents** in the left nav, then switch to the **Analytics** tab on the right-hand panel.
+
+Four independent toggles are available. Enable only the ones you need.
+
+| Toggle | What it returns | Where it appears |
+|--------|------------------|------------------|
+| Intent Recognition | Best-fit intent against your custom list | `analysis.intent.*` |
+| Resolution Analysis | Whether the call achieved its objective | `analysis.resolution.*` |
+| Sentiment | Score and label per call | `analysis.sentiment.*` |
+| Data Extraction | Structured fields you defined | `analysis.extractedData.<name>` |
+
+All four surface in the `analysis` block of the [`session.ended` webhook](/webhooks/events) and in [`GET /api/v1/chat/sessions/{id}`](/api-reference/chat/sessions/get).
+
+## Intent Recognition
+
+Classifies the **purpose** of the conversation against a list of intents you define under **Custom Intent** (comma-separated).
+
+Example for a delivery-confirmation use case:
+
+```text
+Slot-Confirmed, Slot-Rescheduled, Customer-Unavailable, Wrong-Number, Refund-Request
+```
+
+The analysis returns:
+
+<ResponseField name="analysis.intent.conversation.intent" type="string">
+  Best-fit intent across the whole call.
+</ResponseField>
+<ResponseField name="analysis.intent.conversation.confidence" type="number">
+  Confidence score, `0` – `1`.
+</ResponseField>
+<ResponseField name="analysis.intent.conversation.explanation" type="string">
+  Short LLM-generated rationale for the classification.
+</ResponseField>
+<ResponseField name="analysis.intent.message.intent" type="string">
+  Best-fit on the trigger message (less useful for voice).
+</ResponseField>
+
+```json
+"intent": {
+  "conversation": {
+    "intent": "Slot-Confirmed",
+    "confidence": 0.92,
+    "explanation": "Customer agreed to Wednesday afternoon delivery."
+  },
+  "message": { "intent": null, "confidence": 0, "explanation": "…" }
+}
+```
+
+## Resolution Analysis
+
+Classifies whether the call achieved its objective, against a **resolution definition** you provide. Click **+ Add Resolution Definition** and describe in plain language what counts as resolved.
+
+Example resolution definition:
+
+> Call is resolved if the customer confirmed a delivery slot for the order. If a slot was discussed but not finalised, mark `PARTIALLY_RESOLVED`. If the customer refused or the call dropped, mark `UNRESOLVED`.
+
+The payload then carries:
+
+<ResponseField name="analysis.resolution.classification" type="enum">
+  `RESOLVED` / `PARTIALLY_RESOLVED` / `UNRESOLVED` / `NOT_APPLICABLE`.
+</ResponseField>
+<ResponseField name="analysis.resolution.confidenceScore" type="number">
+  `0` – `1` confidence in the verdict.
+</ResponseField>
+<ResponseField name="analysis.resolution.satisfiedChecklistItems" type="string[]">
+  The checklist points met during the call.
+</ResponseField>
+<ResponseField name="analysis.resolution.evidence" type="string[]">
+  Quoted turns from the transcript supporting the verdict.
+</ResponseField>
+<ResponseField name="analysis.resolution.explanation" type="string">
+  Short rationale.
+</ResponseField>
+
+```json
+"resolution": {
+  "classification": "RESOLVED",
+  "confidenceScore": 0.88,
+  "satisfiedChecklistItems": ["delivery_slot_agreed"],
+  "evidence": ["Customer: yes Wednesday afternoon works."],
+  "explanation": "Customer agreed to a specific slot."
+}
+```
+
+## Sentiment
+
+Returns a score and label per call:
+
+<ResponseField name="analysis.sentiment.conversation.sentiment" type="enum">
+  `POSITIVE` / `NEUTRAL` / `NEGATIVE`.
+</ResponseField>
+<ResponseField name="analysis.sentiment.conversation.score" type="number">
+  `-1.0` – `+1.0`.
+</ResponseField>
+<ResponseField name="analysis.sentiment.conversation.detectedLanguage" type="string">
+  ISO-639-1 code; useful when callers may switch language mid-conversation.
+</ResponseField>
+
+```json
+"sentiment": {
+  "conversation": {
+    "sentiment": "POSITIVE",
+    "score": 0.4,
+    "detectedLanguage": "en",
+    "explanation": "Customer was cooperative throughout."
+  }
+}
+```
+
+## Data Extraction
+
+Define a structured schema and Agentix will pull the values out of the transcript.
+
+Click **+ Add Data Extraction** and define one schema entry at a time. Each entry asks for:
+
+- **Name** — the JSON key that will appear under `analysis.extractedData.<name>` in the webhook / session API.
+- **Description** — a one-line hint that tells the analysis model what to look for. Treat this like a mini-prompt: the more precise, the better the extraction.
+- **Type** — `String`, `Number`, `Boolean`, or `Enum` (for `Enum` you'll also be asked for the allowed values).
+
+Repeat for each field. There is no hard cap, but **five tight fields beat fifteen fuzzy ones**.
+
+Example schema for a delivery-confirmation call:
+
+| Name | Description | Type |
+|------|-------------|------|
+| `slotConfirmed` | True if the customer agreed to a specific delivery slot. | Boolean |
+| `preferredDay` | The day the customer chose for delivery. | String |
+| `preferredTimeWindow` | Time window the customer preferred. | Enum (`Morning`, `Afternoon`, `Evening`) |
+| `callbackRequested` | True if the customer asked to be called back later. | Boolean |
+| `callOutcome` | Short categorical outcome. | Enum (`Confirmed`, `Rescheduled`, `Unavailable`, `WrongNumber`) |
+
+Extracted values surface under `analysis.extractedData.<name>` in the webhook and the session detail API:
+
+```json
+"extractedData": {
+  "slotConfirmed": true,
+  "preferredDay": "Wednesday",
+  "preferredTimeWindow": "Afternoon",
+  "callbackRequested": false,
+  "callOutcome": "Confirmed"
+}
+```
+
+<Tip>
+Keep field descriptions specific and unambiguous. A description like *"True if the customer agreed to a specific delivery slot (e.g. 'Wednesday afternoon' counts, 'sometime next week' does not)"* is much more reliable than *"Did they confirm?"*.
+</Tip>
+
+## Combined `analysis` block
+
+When all four toggles are on, the full `analysis` block looks like this:
+
+```json
+"analysis": {
+  "summary": "Customer confirmed delivery slot for Wednesday afternoon.",
+  "intent": {
+    "conversation": { "intent": "Slot-Confirmed", "confidence": 0.92, "explanation": "…" },
+    "message":      { "intent": null, "confidence": 0, "explanation": "…" }
+  },
+  "resolution": {
+    "classification": "RESOLVED",
+    "confidenceScore": 0.88,
+    "status": "Completed",
+    "satisfiedChecklistItems": ["delivery_slot_agreed"],
+    "evidence": ["Customer: yes Wednesday afternoon works."],
+    "explanation": "Customer agreed to a specific slot."
+  },
+  "sentiment": {
+    "conversation": { "sentiment": "POSITIVE", "score": 0.4, "detectedLanguage": "en", "explanation": "…" },
+    "message":      { "sentiment": null, "score": 0, "detectedLanguage": "N/A", "explanation": "…" }
+  },
+  "extractedData": {
+    "slotConfirmed": true,
+    "preferredDay": "Wednesday",
+    "preferredTimeWindow": "Afternoon",
+    "callbackRequested": false,
+    "callOutcome": "Confirmed"
+  }
+}
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Webhook events" icon="webhook" href="/webhooks/events">
+    See the full `session.ended` payload that carries the `analysis` block.
+  </Card>
+  <Card title="Get Session" icon="code" href="/api-reference/chat/sessions/get">
+    Pull the same `analysis` block via REST when you need it on demand.
+  </Card>
+</CardGroup>

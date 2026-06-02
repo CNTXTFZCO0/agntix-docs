@@ -1,6 +1,6 @@
 ---
 title: "List Phone Numbers"
-openapi: "GET /v1/chat/phone-numbers"
+openapi: "GET /api/v1/phone-numbers"
 description: "Returns all phone numbers provisioned for your organization."
 ---
 
@@ -8,36 +8,46 @@ import AuthCallout from "/snippets/auth-callout.mdx";
 
 <AuthCallout />
 
+Use this endpoint to discover the `phone_number_id` you need when [triggering an outbound call](/api-reference/phone-numbers/outbound-call). The returned `id` values are stable — cache them on your side.
+
+## Query parameters
+
+<ParamField query="size" type="integer" default="50">
+  Maximum number of items to return.
+</ParamField>
+
 ## Code examples
 
 <CodeGroup>
 
-```bash curl
-curl "https://api.agntix.ai/v1/chat/phone-numbers?page=1&limit=20" \
-  -H "x-api-key: pk_live_••••"
+```bash cURL
+curl "https://api.agntix.ai/api/v1/phone-numbers?size=50" \
+  -H "x-api-key: $AGNTIX_API_KEY" \
+  -H "Accept: application/json"
 ```
 
 ```javascript Node.js
-const { data: numbers } = await fetch(
-  'https://api.agntix.ai/v1/chat/phone-numbers',
-  { headers: { 'x-api-key': 'pk_live_••••' } },
-).then(r => r.json());
+const { items } = await fetch(
+  "https://api.agntix.ai/api/v1/phone-numbers?size=50",
+  { headers: { "x-api-key": process.env.AGNTIX_API_KEY } },
+).then((r) => r.json());
 
-for (const n of numbers) {
-  console.log(`${n.number} — agent: ${n.agentId ?? 'unassigned'}`);
+for (const n of items) {
+  console.log(`${n.phone_number} — ${n.label ?? "(no label)"}`);
 }
 ```
 
 ```python Python
-import httpx
+import os, requests
 
-result = httpx.get(
-    "https://api.agntix.ai/v1/chat/phone-numbers",
-    headers={"x-api-key": "pk_live_••••"},
+result = requests.get(
+    "https://api.agntix.ai/api/v1/phone-numbers",
+    headers={"x-api-key": os.environ["AGNTIX_API_KEY"]},
+    params={"size": 50},
 ).json()
 
-for n in result["data"]:
-    print(f"{n['number']} — {n.get('agentId', 'unassigned')}")
+for n in result["items"]:
+    print(f"{n['phone_number']} — {n.get('label', '(no label)')}")
 ```
 
 </CodeGroup>
@@ -46,16 +56,13 @@ for n in result["data"]:
 
 ```json
 {
-  "data": [
+  "items": [
     {
-      "id": "pn_01j3m...",
-      "number": "+15550001234",
+      "id": "fba8677f-e464-4362-ba4f-55bbdc3dab94",
+      "phone_number": "+9714XXXXXXX",
       "provider": "twilio",
-      "agentId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-      "orgId": "org_2abc123",
-      "createdAt": "2026-04-01T12:00:00Z"
+      "label": "Outbound-Dubai"
     }
-  ],
-  "pagination": { "page": 1, "limit": 20, "total": 1, "totalPages": 1 }
+  ]
 }
 ```

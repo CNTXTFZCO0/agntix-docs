@@ -7,65 +7,52 @@ import AuthCallout from "/snippets/auth-callout.mdx";
 
 <AuthCallout />
 
-Agentix delivers webhooks via [Svix](https://svix.com). Configure endpoints from the dashboard or via the [Webhooks API](/api-reference/webhooks). All payloads share an envelope:
+Agentix delivers webhooks via [Svix](https://svix.com). Configure endpoints from the dashboard's **Developer** section — see [Webhooks overview](/webhooks/overview).
 
-```json
-{
-  "id": "evt_2dQp…",
-  "type": "session.ended",
-  "createdAt": "2026-04-28T11:42:11Z",
-  "data": { /* event-specific payload */ }
-}
-```
+Voice and chat sessions emit two events: `session.created` (when the call/conversation starts) and `session.ended` (when it closes, with the full post-call analysis attached). Several auxiliary events are emitted for chat platform, messages, usage, and infra changes — they're listed at the bottom of this page.
 
-`id` is a stable, monotonically-increasing identifier — use it for idempotency.
+<Warning>
+Treat the top-level `id` (session UUID) as the **idempotency key**. Don't double-process the same `id`. Webhooks may be retried on non-`2xx` responses — respond `2xx` once you've durably enqueued the event.
+</Warning>
 
 ---
 
-## `session.started`
+## `session.created`
 
-Fired when a chat or voice session is created.
+Fired when a session is **initiated** — for outbound voice calls, this is *before pickup*. Use it to lock the originating task as "in-flight".
 
-<ResponseField name="data.sessionId" type="string">The session id (`ses_…`).</ResponseField>
-<ResponseField name="data.agentId" type="string">The agent id (`agnt_…`).</ResponseField>
-<ResponseField name="data.userId" type="string">The customer-supplied user id.</ResponseField>
-<ResponseField name="data.platform" type="enum">`WEB`, `WHATSAPP`, `VOICE`.</ResponseField>
-<ResponseField name="data.startedAt" type="string">RFC 3339 UTC timestamp.</ResponseField>
-
-```json
-{
-  "id": "evt_2dQp…",
-  "type": "session.started",
-  "createdAt": "2026-04-28T11:42:11Z",
-  "data": {
-    "sessionId": "ses_01J2K…",
-    "agentId": "agnt_01J0X…",
-    "userId": "customer-123",
-    "platform": "WEB",
-    "startedAt": "2026-04-28T11:42:11Z"
-  }
-}
-```
-
----
-
-## `session.updated`
-
-Any change to a session's state, agent assignment, intelligence summary, or analytics record.
-
-<ResponseField name="data.sessionId" type="string" />
-<ResponseField name="data.changedFields" type="string[]">Which fields changed (e.g. `["state", "intelligence"]`).</ResponseField>
-<ResponseField name="data.state" type="enum">`OPEN`, `CLOSED`, `EXPIRED`.</ResponseField>
+<ResponseField name="id" type="string">The session id (UUID). Use as idempotency key.</ResponseField>
+<ResponseField name="eventType" type="string">Constant: `"session.created"`.</ResponseField>
+<ResponseField name="type" type="enum">`VOICE`, `CHAT`.</ResponseField>
+<ResponseField name="platform" type="enum">`PHONE`, `WEB`, `WHATSAPP`.</ResponseField>
+<ResponseField name="direction" type="enum">`INBOUND`, `OUTBOUND`.</ResponseField>
+<ResponseField name="state" type="enum">Session state at emission (`OPEN` for `session.created`).</ResponseField>
+<ResponseField name="agentId" type="string">The agent id (UUID).</ResponseField>
+<ResponseField name="createdAt" type="string">RFC 3339 UTC timestamp.</ResponseField>
+<ResponseField name="metadata" type="object">
+  Channel and session metadata. Includes `customerPhoneNumber`, `roomName`, and `sessionVariables` — see below.
+</ResponseField>
+<ResponseField name="metadata.sessionVariables" type="object">
+  The `session_variables` you passed at trigger time, echoed back **verbatim** — regardless of whether the prompt referenced them. Use these as your correlation IDs (e.g. `crmContactId`, `taskId`, `campaignId`).
+</ResponseField>
 
 ```json
 {
-  "id": "evt_2dQq…",
-  "type": "session.updated",
-  "createdAt": "2026-04-28T11:43:00Z",
-  "data": {
-    "sessionId": "ses_01J2K…",
-    "changedFields": ["intelligence"],
-    "state": "OPEN"
+  "id": "4981804c-2658-4893-84ff-9c2fa90fb3c2",
+  "eventType": "session.created",
+  "type": "VOICE",
+  "platform": "PHONE",
+  "direction": "OUTBOUND",
+  "state": "OPEN",
+  "agentId": "40235145-aa3d-443e-9d0c-841dd0716a2f",
+  "createdAt": "2026-04-08T05:00:01.130Z",
+  "metadata": {
+    "customerPhoneNumber": "+971501234567",
+    "roomName": "outbound_sip_40235145-aa3d-443e-9d0c-841dd0716a2f^__^7yoamyb",
+    "sessionVariables": {
+      "crmContactId": "CRM-7728",
+      "customerName": "Alex Morgan"
+    }
   }
 }
 ```
@@ -74,25 +61,107 @@ Any change to a session's state, agent assignment, intelligence summary, or anal
 
 ## `session.ended`
 
-Fired once when a session closes (manually, via timeout, or on call hangup).
+Fired once when a session closes (manually, via timeout, on call hangup, or on `ttl` expiry). Carries the full post-call **`analysis`** block — see [Post-call analysis](/guides/post-call-analysis) for what each field means.
 
-<ResponseField name="data.sessionId" type="string" />
-<ResponseField name="data.endedReason" type="enum">
-  `user_hangup`, `agent_hangup`, `auto_close`, `max_duration_reached`, `error`.
+<ResponseField name="id" type="string">The session id (UUID). Same as in `session.created`.</ResponseField>
+<ResponseField name="eventType" type="string">Constant: `"session.ended"`.</ResponseField>
+<ResponseField name="state" type="enum">`CLOSED`.</ResponseField>
+<ResponseField name="createdAt" type="string">Session start time.</ResponseField>
+<ResponseField name="lastActivityAt" type="string">Most recent activity timestamp.</ResponseField>
+<ResponseField name="endedAt" type="string">When the session closed.</ResponseField>
+<ResponseField name="metadata" type="object">Same shape as `session.created`. `metadata.sessionVariables` is echoed verbatim.</ResponseField>
+<ResponseField name="analysis.summary" type="string">One-paragraph summary of the call.</ResponseField>
+<ResponseField name="analysis.intent" type="object">
+  Best-fit intent classification — `conversation.intent`, `confidence`, `explanation`. Present only when **Intent Recognition** is enabled on the agent.
 </ResponseField>
-<ResponseField name="data.durationMs" type="number">Total session duration in milliseconds.</ResponseField>
-<ResponseField name="data.summary" type="object">Optional intelligence summary if generated.</ResponseField>
+<ResponseField name="analysis.resolution" type="object">
+  `classification` (`RESOLVED` / `PARTIALLY_RESOLVED` / `UNRESOLVED` / `NOT_APPLICABLE`), `confidenceScore`, `satisfiedChecklistItems`, `evidence`, `explanation`. Present only when **Resolution Analysis** is enabled.
+</ResponseField>
+<ResponseField name="analysis.sentiment" type="object">
+  `conversation.sentiment` (`POSITIVE` / `NEUTRAL` / `NEGATIVE`), `score` (-1.0 to +1.0), `detectedLanguage`. Present only when **Sentiment** is enabled.
+</ResponseField>
+<ResponseField name="analysis.extractedData" type="object">
+  Map of `{ <fieldName>: <value> }` for every field defined in the agent's **Data Extraction** schema.
+</ResponseField>
+<ResponseField name="recordingUrl" type="string">Link into the dashboard to play back the call recording.</ResponseField>
 
 ```json
 {
-  "id": "evt_2dQr…",
-  "type": "session.ended",
-  "createdAt": "2026-04-28T11:48:21Z",
-  "data": {
-    "sessionId": "ses_01J2K…",
-    "endedReason": "user_hangup",
-    "durationMs": 372100
-  }
+  "id": "4981804c-2658-4893-84ff-9c2fa90fb3c2",
+  "eventType": "session.ended",
+  "type": "VOICE",
+  "platform": "PHONE",
+  "direction": "OUTBOUND",
+  "state": "CLOSED",
+  "agentId": "40235145-aa3d-443e-9d0c-841dd0716a2f",
+
+  "createdAt": "2026-04-08T05:00:01.130Z",
+  "lastActivityAt": "2026-04-08T05:00:01.130Z",
+  "endedAt": "2026-04-08T05:00:10.546Z",
+  "updatedAt": "2026-04-08T05:00:01.130Z",
+
+  "metadata": {
+    "customerPhoneNumber": "+971501234567",
+    "roomName": "outbound_sip_40235145-aa3d-443e-9d0c-841dd0716a2f^__^7yoamyb",
+    "sessionVariables": {
+      "crmContactId": "CRM-7728",
+      "customerName": "Alex Morgan"
+    }
+  },
+
+  "analysis": {
+    "summary": "Customer confirmed delivery slot for Wednesday afternoon.",
+    "intent": {
+      "conversation": { "intent": "Slot-Confirmed", "confidence": 0.92, "explanation": "…" },
+      "message":      { "intent": null, "confidence": 0, "explanation": "…" }
+    },
+    "resolution": {
+      "classification": "RESOLVED",
+      "confidenceScore": 0.88,
+      "status": "Completed",
+      "satisfiedChecklistItems": ["delivery_slot_agreed"],
+      "evidence": ["Customer: yes Wednesday afternoon works."],
+      "explanation": "Customer agreed to a specific slot."
+    },
+    "sentiment": {
+      "conversation": { "sentiment": "POSITIVE", "score": 0.4, "detectedLanguage": "en", "explanation": "…" },
+      "message":      { "sentiment": null, "score": 0, "detectedLanguage": "N/A", "explanation": "…" }
+    },
+    "extractedData": {
+      "slotConfirmed": true,
+      "preferredDay": "Wednesday",
+      "preferredTimeWindow": "Afternoon",
+      "callbackRequested": false,
+      "callOutcome": "Confirmed"
+    }
+  },
+
+  "recordingUrl": "https://app.agntix.ai/en/logs-history?opened=4981804c-2658-4893-84ff-9c2fa90fb3c2"
+}
+```
+
+<Note>
+The webhook is **summary-grade**, not transcript-grade. The full message-by-message transcript is not included, and some long-call fields may be truncated. For the complete picture, pull from [`GET /api/v1/chat/sessions/{id}/messages`](/api-reference/chat/messages/list).
+</Note>
+
+---
+
+## `session.updated` <Tag>chat</Tag>
+
+Emitted for **chat** sessions when state, agent assignment, intelligence summary, or analytics records change mid-session. Voice/outbound calls do **not** emit this event — they go straight from `session.created` to `session.ended`.
+
+<ResponseField name="id" type="string">Session id (UUID).</ResponseField>
+<ResponseField name="eventType" type="string">Constant: `"session.updated"`.</ResponseField>
+<ResponseField name="changedFields" type="string[]">Which fields changed (e.g. `["state", "intelligence"]`).</ResponseField>
+<ResponseField name="state" type="enum">`OPEN`, `CLOSED`, `EXPIRED`.</ResponseField>
+
+```json
+{
+  "id": "ses_01J2K…",
+  "eventType": "session.updated",
+  "createdAt": "2026-04-28T11:43:00Z",
+  "changedFields": ["intelligence"],
+  "state": "OPEN"
 }
 ```
 
@@ -157,7 +226,7 @@ A document finished processing (chunked + embedded + indexed).
 
 ## Delivery semantics
 
-- **At-least-once.** Always idempotent on `id`.
+- **At-least-once.** Always idempotent on the top-level `id`.
 - **Order is not guaranteed.** Use `createdAt` if you need to sort.
 - **Retries:** exponential backoff up to 24h. After 24h the event is dead-lettered (visible in the dashboard).
 - **Timeout:** your endpoint must respond `2xx` within **15 seconds**.

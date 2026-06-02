@@ -1,6 +1,6 @@
 ---
 title: "Start Outbound Call"
-openapi: "POST /v1/chat/phone-numbers/outbound/call"
+openapi: "POST /api/v1/phone-numbers/{phone_number_id}/calls/start"
 description: "Initiate an outbound voice call from a provisioned number to a target phone number."
 ---
 
@@ -9,58 +9,105 @@ import AuthCallout from "/snippets/auth-callout.mdx";
 <AuthCallout />
 
 <Note>
-  The `agentId` must belong to a voice-enabled agent (`voiceEnabled: true`). The `phoneNumberId` must be a provisioned number in your organization.
+  The `agent_id` must belong to a voice-enabled agent. The `phone_number_id` must be a provisioned outbound number in your organization — list them with [`GET /api/v1/phone-numbers`](/api-reference/phone-numbers/list).
 </Note>
+
+## Request
+
+<ParamField path="phone_number_id" type="string" required>
+  UUID of the outbound phone number to dial from.
+</ParamField>
+
+<ParamField body="to_phone_number" type="string" required>
+  Destination number in E.164 format (e.g. `+971501234567`).
+</ParamField>
+<ParamField body="agent_id" type="string" required>
+  UUID of the agent that will drive the conversation.
+</ParamField>
+<ParamField body="ttl" type="integer" default="100">
+  Maximum call duration in seconds. The call is force-terminated when this elapses.
+</ParamField>
+<ParamField body="session_variables" type="object">
+  Free-form key/value map. Every key is available as `{{key}}` in the system prompt **and** is echoed back verbatim in webhooks regardless of whether the prompt referenced it. Use this for both prompt context and correlation IDs. See [Session variables](/guides/session-variables).
+</ParamField>
 
 ## Code examples
 
 <CodeGroup>
 
-```bash curl
-curl -X POST https://api.agntix.ai/v1/chat/phone-numbers/outbound/call \
-  -H "x-api-key: pk_live_••••" \
-  -H "Content-Type: application/json" \
+```bash cURL
+curl -X POST 'https://api.agntix.ai/api/v1/phone-numbers/fba8677f-e464-4362-ba4f-55bbdc3dab94/calls/start' \
+  -H "x-api-key: $AGNTIX_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json' \
   -d '{
-    "phoneNumberId": "pn_01j3m...",
-    "to": "+15550001234",
-    "agentId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-    "metadata": { "campaignId": "camp_01j3m" }
+    "to_phone_number": "+971501234567",
+    "agent_id": "d796c919-7ef3-413a-8bf1-351b6442953a",
+    "ttl": 180,
+    "session_variables": {
+      "customerName": "Alex Morgan",
+      "contextSummary": "Order #88291, placed 2026-05-09, status shipped, ETA 2026-05-14",
+      "objective": "Confirm delivery slot and capture preferred time",
+      "crmContactId": "CRM-7728"
+    }
   }'
 ```
 
 ```javascript Node.js
-const call = await fetch('https://api.agntix.ai/v1/chat/phone-numbers/outbound/call', {
-  method: 'POST',
-  headers: {
-    'x-api-key': 'pk_live_••••',
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({
-    phoneNumberId: 'pn_01j3m...',
-    to: '+15550001234',
-    agentId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
-    metadata: { campaignId: 'camp_01j3m' },
-  }),
-}).then(r => r.json());
+const phoneNumberId = "fba8677f-e464-4362-ba4f-55bbdc3dab94";
 
-console.log('Call ID:', call.callId, '— Status:', call.status);
+const res = await fetch(
+  `https://api.agntix.ai/api/v1/phone-numbers/${phoneNumberId}/calls/start`,
+  {
+    method: "POST",
+    headers: {
+      "x-api-key": process.env.AGNTIX_API_KEY,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({
+      to_phone_number: "+971501234567",
+      agent_id: "d796c919-7ef3-413a-8bf1-351b6442953a",
+      ttl: 180,
+      session_variables: {
+        customerName: "Alex Morgan",
+        contextSummary:
+          "Order #88291, placed 2026-05-09, status shipped, ETA 2026-05-14",
+        objective: "Confirm delivery slot and capture preferred time",
+        crmContactId: "CRM-7728",
+      },
+    }),
+  },
+);
+const { sessionId } = await res.json();
+console.log("Session:", sessionId);
 ```
 
 ```python Python
-import httpx
+import os, requests
 
-call = httpx.post(
-    "https://api.agntix.ai/v1/chat/phone-numbers/outbound/call",
-    headers={"x-api-key": "pk_live_••••"},
-    json={
-        "phoneNumberId": "pn_01j3m...",
-        "to": "+15550001234",
-        "agentId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-        "metadata": {"campaignId": "camp_01j3m"},
+phone_number_id = "fba8677f-e464-4362-ba4f-55bbdc3dab94"
+
+res = requests.post(
+    f"https://api.agntix.ai/api/v1/phone-numbers/{phone_number_id}/calls/start",
+    headers={
+        "x-api-key": os.environ["AGNTIX_API_KEY"],
+        "Content-Type": "application/json",
+        "Accept": "application/json",
     },
-).json()
-
-print(f"Call {call['callId']} — {call['status']}")
+    json={
+        "to_phone_number": "+971501234567",
+        "agent_id": "d796c919-7ef3-413a-8bf1-351b6442953a",
+        "ttl": 180,
+        "session_variables": {
+            "customerName": "Alex Morgan",
+            "contextSummary": "Order #88291, placed 2026-05-09, status shipped, ETA 2026-05-14",
+            "objective": "Confirm delivery slot and capture preferred time",
+            "crmContactId": "CRM-7728",
+        },
+    },
+)
+session_id = res.json()["sessionId"]
 ```
 
 </CodeGroup>
@@ -69,9 +116,12 @@ print(f"Call {call['callId']} — {call['status']}")
 
 ```json
 {
-  "callId": "call_01j3m...",
-  "status": "INITIATED"
+  "sessionId": "4981804c-2658-4893-84ff-9c2fa90fb3c2"
 }
 ```
 
-For high-volume outbound calling, use [Call Campaigns](/api-reference/generated/create-campaign) instead — they manage retries, scheduling, and contact lists automatically.
+The same `sessionId` flows in [`session.created` / `session.ended` webhooks](/webhooks/events) and is the path parameter for [`GET /api/v1/chat/sessions/{sessionId}`](/api-reference/chat/sessions/get).
+
+<Tip>
+For high-volume outbound calling, use [Call Campaigns](/guides/call-campaigns) instead — they manage retries, scheduling, and contact lists automatically.
+</Tip>

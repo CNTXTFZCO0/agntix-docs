@@ -97,6 +97,9 @@
               "guides/build-your-first-agent",
               "guides/chat-with-rag",
               "guides/voice-calls",
+              "guides/session-variables",
+              "guides/post-call-analysis",
+              "guides/programmatic-outbound-calling",
               "guides/call-campaigns",
               "guides/knowledge-stores",
               "guides/tools"
