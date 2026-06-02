@@ -1,0 +1,151 @@
+---
+title: "Session variables"
+description: "Hydrate the system prompt at call-start with per-call context and built-in date / channel / telephony placeholders."
+---
+
+import AuthCallout from "/snippets/auth-callout.mdx";
+
+<AuthCallout />
+
+Each agent has a **System Prompt** that defines its behaviour. You can sprinkle placeholders into the prompt that are resolved at **call-start time** from two sources:
+
+- **System variables** — populated automatically by Agentix (date/time, channel context, telephony identifiers).
+- **Custom variables** — supplied by you under `session_variables` in the call-trigger request.
+
+## How dynamic variable replacement works
+
+Placeholders use double-curly syntax: `{{variable_name}}`.
+
+When a call starts, Agentix runs a templating pass over the system prompt **before** the very first message is sent to the model. Everything inside `{{…}}` is replaced with the resolved value. The LLM never sees the placeholder — it only sees the final, hydrated prompt.
+
+Prompt template:
+
+```text
+Hello {{customerName}}, you are calling about {{orderInsight}}.
+```
+
+Sent to the LLM at runtime:
+
+```text
+Hello Alex, you are calling about order #88291 (placed 2026-05-09, status: shipped, tracking AE998123).
+```
+
+<Note>
+**Rules to remember**
+
+- If a placeholder has no matching value, it is left as-is (e.g. `{{customerAge}}` stays literal). Instruct the LLM to ask the user for it rather than leaving the literal placeholder in dialogue.
+- Replacement happens once per session, at the start. Mid-call value changes are not propagated.
+- Values are always rendered as strings. Pass pre-formatted strings (currency, dates) if you need them styled.
+</Note>
+
+## System variables (provided automatically)
+
+These keys are populated by Agentix at call-start — you don't pass them in. They cover **date / time**, **channel context**, and **telephony identifiers**.
+
+### Date and time
+
+| Placeholder | How it's computed | Example output |
+|-------------|-------------------|----------------|
+| `{{system.year}}` | `now.getFullYear()` (UTC server) | `2026` |
+| `{{system.date}}` | `now.toISOString().split('T')[0]` (UTC date) | `2026-05-08` |
+| `{{system.time}}` | `now.toLocaleTimeString()` (UTC server locale) | `10:28:42 AM` |
+| `{{system.now}}` | `now.toISOString()` (UTC) | `2026-05-08T10:28:42.123Z` |
+| `{{system.dubai.now}}` | `now` shifted to Asia/Dubai (UTC+4) → ISO | `2026-05-08T14:28:42.000Z` |
+
+Use these for time-aware behaviour ("a viewing this week", "the order placed 3 days ago", "good morning/afternoon").
+
+### Channel context
+
+| Placeholder | Resolves to | Example |
+|-------------|-------------|---------|
+| `{{system.platform}}` | Session platform | `voice` / `chat` / `whatsapp` |
+| `{{system.medium}}` | Session medium | `phone` / `web` |
+| `{{system.direction}}` | Call direction | `inbound` / `outbound` |
+
+### Telephony and session identifiers
+
+| Placeholder | Resolves to | Example |
+|-------------|-------------|---------|
+| `{{system.incoming.phonenumber}}` | Incoming number (or empty) | `+97142000000` |
+| `{{system.outgoing.phonenumber}}` | Outgoing number (or empty) | `+971501234567` |
+| `{{system.customer.phonenumber}}` | **Always points to the customer's number, regardless of direction** | `+971507654321` |
+| `{{system.roomname}}` | LiveKit room name (or empty) | `voice-room-7f3b…` |
+| `{{system.sessionId}}` | Session ID | `sess_abc123` |
+
+<Tip>
+**Fallback rule:** any non-`system.*` `{{key}}` is pulled from `session_variables`. If the key is missing or empty, instruct the LLM to ask the user for it rather than leaving the literal `{{key}}` in dialogue.
+</Tip>
+
+## Custom variables
+
+You define these yourself. Anything you send under `session_variables` in the trigger request becomes available as `{{key}}` in the prompt.
+
+A typical canonical set for an outbound use case:
+
+| Variable | Purpose | Example value |
+|----------|---------|---------------|
+| `customerName` | Who the agent is calling | `"Alex Morgan"` |
+| `contextSummary` | Pre-baked summary of the reason for the call | `"Order #88291, placed 2026-05-09, status shipped, ETA 2026-05-14"` |
+| `objective` | What the agent should accomplish | `"Confirm delivery slot and capture preferred time"` |
+| `crmContactId` | **Mapping key** back to your CRM record | `"CRM-7728"` |
+
+<Note>
+The CRM mapping key (`crmContactId` above) is critical: it's the thread you'll use later to map the Agentix call back to your own contact record. It is echoed back verbatim in the webhook payload under `metadata.sessionVariables` — see [Webhook events](/webhooks/events).
+</Note>
+
+## Designing a system prompt that uses these variables
+
+A prompt template that exercises both system and custom variables:
+
+```text
+You are calling {{customerName}} on behalf of Acme Co.
+
+Today is {{system.dubai.now}}.
+
+Context for this call:
+{{contextSummary}}
+
+Your objective:
+{{objective}}
+
+Conversation rules:
+  - Greet the customer by name.
+  - Stay polite and concise — keep the call under 3 minutes.
+  - If the customer is unavailable, ask for a better time to call back.
+
+When the objective is satisfied, thank the customer and end the call.
+```
+
+The corresponding `session_variables` payload at call time:
+
+```json
+{
+  "customerName": "Alex Morgan",
+  "contextSummary": "Order #88291, placed 2026-05-09, status shipped, ETA 2026-05-14",
+  "objective": "Confirm delivery slot and capture preferred time",
+  "crmContactId": "CRM-7728"
+}
+```
+
+<Tip>
+Build `contextSummary` server-side by concatenating relevant fields from your DB. Sending one pre-formatted string keeps the prompt readable and lets you change the surface format without touching the agent config.
+</Tip>
+
+## Cheat sheet
+
+| Type | Pattern | Source | Example |
+|------|---------|--------|---------|
+| System | `{{system.now}}` | Agentix | `2026-05-13T11:02:14Z` |
+| System | `{{system.customer.phonenumber}}` | Agentix | `+971507654321` |
+| Custom | `{{anyKey}}` | `session_variables.anyKey` in trigger call | `Alex Morgan` |
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Trigger an outbound call" icon="phone-arrow-up-right" href="/guides/programmatic-outbound-calling">
+    Pass `session_variables` in the call-start request.
+  </Card>
+  <Card title="Post-call analysis" icon="chart-line" href="/guides/post-call-analysis">
+    Configure structured fields that get extracted from the transcript.
+  </Card>
+</CardGroup>

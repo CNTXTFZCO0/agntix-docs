@@ -1,29 +1,36 @@
 ---
 title: "List Messages"
-openapi: "GET /v1/chat/chat/sessions/{sessionId}/messages"
-description: "Returns all messages in a session, ordered chronologically."
+openapi: "GET /api/v1/chat/sessions/{sessionId}/messages"
+description: "Returns every utterance in a session — user, assistant, and tool calls — ordered chronologically."
 ---
 
 import AuthCallout from "/snippets/auth-callout.mdx";
 
 <AuthCallout />
 
+Returns every utterance — user, assistant, and tool calls if any. This is the source-of-truth for QA reviewers and for re-training extraction prompts.
+
+<Tip>
+**Don't poll. Pull-on-event.** Receive the [`session.ended`](/webhooks/events) webhook first, persist the summary fields, then fetch the transcript asynchronously and stash it in object storage (S3/GCS) for your reviewer UI.
+</Tip>
+
 ## Code examples
 
 <CodeGroup>
 
-```bash curl
-curl "https://api.agntix.ai/v1/chat/chat/sessions/ses_01j3m8xkqp8v2nw4f7g9hk0r/messages?page=1&limit=50" \
-  -H "x-api-key: pk_live_••••"
+```bash cURL
+curl "https://api.agntix.ai/api/v1/chat/sessions/$SESSION_ID/messages" \
+  -H "x-api-key: $AGNTIX_API_KEY" \
+  -H "Accept: application/json"
 ```
 
 ```javascript Node.js
-const sessionId = 'ses_01j3m8xkqp8v2nw4f7g9hk0r';
+const sessionId = "4981804c-2658-4893-84ff-9c2fa90fb3c2";
 
-const { data: messages, pagination } = await fetch(
-  `https://api.agntix.ai/v1/chat/chat/sessions/${sessionId}/messages?page=1&limit=50`,
-  { headers: { 'x-api-key': 'pk_live_••••' } },
-).then(r => r.json());
+const { data: messages } = await fetch(
+  `https://api.agntix.ai/api/v1/chat/sessions/${sessionId}/messages`,
+  { headers: { "x-api-key": process.env.AGNTIX_API_KEY } },
+).then((r) => r.json());
 
 for (const msg of messages) {
   console.log(`[${msg.role}] ${msg.content}`);
@@ -31,14 +38,13 @@ for (const msg of messages) {
 ```
 
 ```python Python
-import httpx
+import os, requests
 
-session_id = "ses_01j3m8xkqp8v2nw4f7g9hk0r"
+session_id = "4981804c-2658-4893-84ff-9c2fa90fb3c2"
 
-result = httpx.get(
-    f"https://api.agntix.ai/v1/chat/chat/sessions/{session_id}/messages",
-    headers={"x-api-key": "pk_live_••••"},
-    params={"page": 1, "limit": 50},
+result = requests.get(
+    f"https://api.agntix.ai/api/v1/chat/sessions/{session_id}/messages",
+    headers={"x-api-key": os.environ["AGNTIX_API_KEY"]},
 ).json()
 
 for msg in result["data"]:
@@ -54,15 +60,15 @@ for msg in result["data"]:
   "data": [
     {
       "id": "msg_01j3m_user",
-      "content": "What is my current subscription plan?",
+      "content": "Hi, this is Alex.",
       "role": "USER",
-      "createdAt": "2026-04-29T09:10:00Z"
+      "createdAt": "2026-04-08T05:00:03.120Z"
     },
     {
       "id": "msg_01j3m_assistant",
-      "content": "Your current plan is Pro.",
+      "content": "Hello Alex, I'm calling about your order #88291. Is now a good time?",
       "role": "ASSISTANT",
-      "createdAt": "2026-04-29T09:10:01Z"
+      "createdAt": "2026-04-08T05:00:04.001Z"
     }
   ],
   "pagination": {

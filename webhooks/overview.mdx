@@ -1,13 +1,13 @@
 ---
 title: "Webhooks overview"
-description: "Get notified at-least-once when sessions, messages, or usage change."
+description: "Get notified at-least-once when sessions are created, end, or change — and consume the post-call analysis on `session.ended`."
 ---
 
 import AuthCallout from "/snippets/auth-callout.mdx";
 
 <AuthCallout />
 
-Agentix uses [Svix](https://svix.com) for durable webhook delivery. Configure endpoints from the dashboard or programmatically via the [Webhooks API](/api-reference/webhooks).
+Agentix uses [Svix](https://svix.com) for durable webhook delivery. Webhooks are how your backend learns the moment a call starts and the moment it ends — they are the primary glue between Agentix and your downstream systems.
 
 ## Why webhooks?
 
@@ -16,26 +16,85 @@ Agentix uses [Svix](https://svix.com) for durable webhook delivery. Configure en
 | Update a CRM when a call ends | **Webhooks** (durable) |
 | Live UI updates while a chat is happening | [SSE](/guides/streaming-events) (low-latency) |
 
+## Adding a webhook endpoint
+
+In the Agentix dashboard left nav, open **Developer** (under *Integrations*) and click **+ Add Endpoint** in the top-right. A dialog opens with the following fields:
+
+<ParamField path="Endpoint URL" type="string" required>
+  Your receiver, e.g. `https://hooks.acme.com/agntix`. Must be a public HTTPS URL.
+</ParamField>
+<ParamField path="Description" type="string">
+  Free-form label, e.g. `"Production call events"`.
+</ParamField>
+<ParamField path="Rate Limit" type="integer">
+  Requests-per-second cap. Set comfortably above peak (e.g. `50` for a 10-concurrent-call burst).
+</ParamField>
+<ParamField path="Subscribe to events" type="string[]" required>
+  Tick `session.created` and/or `session.ended`. See [Event types](/webhooks/events) for the full list.
+</ParamField>
+
+Events delivered for outbound voice calls:
+
+- **`session.created`** — fires when the call is *initiated* (before pickup). Use it to lock the originating task as "in-flight".
+- **`session.ended`** — fires when the call closes, with the full post-call analysis attached. This is what your pipeline consumes.
+
 ## Lifecycle
 
-1. **Create** an endpoint with a public HTTPS URL.
-2. **Subscribe** it to one or more event types — see [Events](/webhooks/events).
+1. **Create** an endpoint with a public HTTPS URL via **Developer → + Add Endpoint**.
+2. **Subscribe** it to the events you care about — see [Events](/webhooks/events).
 3. **Receive** POST requests with a `svix-signature` header. **Verify the signature** before trusting the payload — see [Verifying signatures](/webhooks/verify-signatures).
 4. Reply with **2xx** within 15 seconds. Anything else triggers a retry with exponential backoff (24h max).
 
 ## Payload shape
 
+Session events use a flat envelope (no nested `data` field). The top-level `id` is the session UUID — use it as your idempotency key.
+
 ```json
 {
-  "id": "evt_2dQp…",
-  "type": "session.ended",
-  "createdAt": "2026-04-28T11:42:11Z",
-  "data": {
-    "sessionId": "ses_…",
-    "agentId": "agnt_…",
-    "endedReason": "user_hangup"
-  }
+  "id": "4981804c-2658-4893-84ff-9c2fa90fb3c2",
+  "eventType": "session.ended",
+  "type": "VOICE",
+  "platform": "PHONE",
+  "direction": "OUTBOUND",
+  "state": "CLOSED",
+  "agentId": "40235145-aa3d-443e-9d0c-841dd0716a2f",
+  "createdAt": "2026-04-08T05:00:01.130Z",
+  "endedAt": "2026-04-08T05:00:10.546Z",
+  "metadata": {
+    "customerPhoneNumber": "+971501234567",
+    "sessionVariables": {
+      "crmContactId": "CRM-7728"
+    }
+  },
+  "analysis": { /* … see /webhooks/events */ },
+  "recordingUrl": "https://app.agntix.ai/en/logs-history?opened=4981804c…"
 }
 ```
 
-The full schema for each event lives in the [Events](/webhooks/events) page.
+The full schema for each event lives on the [Event types](/webhooks/events) page.
+
+## Idempotency and retries
+
+<Warning>
+Treat the top-level `id` (session UUID) as the **idempotency key**. Don't double-process the same `id`. Webhooks may be retried on non-`2xx` responses — respond `2xx` once you've durably enqueued the event.
+</Warning>
+
+The webhook is **summary-grade**, not transcript-grade:
+
+- The full message-by-message transcript is not in the webhook.
+- Some fields may be truncated for very long calls.
+- For the complete picture, pull from [`GET /api/v1/chat/sessions/{id}/messages`](/api-reference/chat/messages/list) — the webhook arrives first, then you fetch on-demand.
+
+## Mapping a call back to your CRM
+
+Production traffic almost always means **many parallel calls** and webhooks arrive in unpredictable order. To map each webhook back to its originating task, include a unique identifier in `session_variables` at trigger time:
+
+```json
+"session_variables": {
+  "crmContactId": "CRM-7728",
+  "campaignId":   "CAMP-2026-05-13-001",
+  "taskId":       "TASK-9911"
+}
+```
+
+These keys are echoed back **verbatim** under `metadata.sessionVariables` in every webhook — regardless of whether the agent prompt referenced them. See [Programmatic outbound calling](/guides/programmatic-outbound-calling) for the full pattern.
