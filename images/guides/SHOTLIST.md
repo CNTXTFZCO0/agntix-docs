@@ -16,15 +16,12 @@ Conventions:
 
 ## `build-your-first-agent/`
 
-| Filename                          | What to capture |
-|-----------------------------------|-----------------|
-| `01-agents-list-empty.png`        | The `/agents` page (Topbar shows "Agents", empty or near-empty list). Highlight the **+ Create Agent** button. |
-| `02-create-step1-template.png`    | Step 1 of the Create Agent modal — the "Blank Template" tile + the template carousel. |
-| `03-create-step2-general.png`     | Step 2 — General Settings form: Voice Enabled toggle, Name, Language, Role, Description. |
-| `04-create-step3-prompt.png`      | Step 3 — System Prompt textarea, with example prompt text typed in. |
-| `05-create-step4-attach.png`      | Step 4 — Knowledge & Tools — both selects visible, one knowledge store selected. |
-| `06-agent-detail-overview.png`    | `/agents/[id]` — header (Test Agent button + Save Changes), left column system prompt, right column tab strip (Calls / Chat / Functions / etc.). |
-| `07-agent-test-call-button.png`   | Close-up of the green **Test Agent** button in the header. |
+| Filename                        | What to capture |
+|---------------------------------|-----------------|
+| `01-agents-list-empty.png`      | The `/agents` page (Topbar shows "Agents", empty or near-empty list). Highlight the **+ Create Agent** button. |
+| `02-create-agent-modal.png`     | The **Create New Agent** dialog — single screen with **Name**, **Language**, and the **Voice Enabled** toggle, plus the **Create Agent** button. (Creation is one step — there is no template/multi-step wizard.) |
+| `03-agent-detail-overview.png`  | `/agents/[id]` — header (**Test Agent** button + **Save Changes**), left column **System Prompt**, right column tab strip (Calls / Chat / Behavior / Functions / Multi-agents / Analytics / Widgets). |
+| `04-test-agent-button.png`      | Close-up of the green **Test Agent** button in the header. |
 
 ## `voice-calls/`
 
@@ -48,8 +45,9 @@ Conventions:
 | `03-upload-document-dropdown.png`         | The store detail page with the **Add** dropdown open showing "Upload file" / "Add website". |
 | `04-upload-progress.png`                  | Document upload in progress (or "Processing" status badge on a freshly uploaded file). |
 | `05-document-ready.png`                   | A document row with status = "Ready" / processed. |
-| `06-agent-attach-knowledge.png`           | `/agents/[id]` Knowledge dropdown selected with a store, plus the **Top K / Top N** sliders visible. |
 | `07-test-rag-response.png`                | A chat in the Test Agent panel or the SDK demo page where the agent answered using the knowledge store (cite the source if shown). |
+
+> Note: there is no `06-agent-attach-knowledge.png` shot — attaching a store to an agent is API-only in the current release (the in-dashboard **Knowledge** tab is disabled), so Step 4 of the guide has no screenshot.
 
 ## `tools/`
 

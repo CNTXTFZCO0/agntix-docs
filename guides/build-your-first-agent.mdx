@@ -1,9 +1,9 @@
 ---
 title: "Build your first agent"
-description: "Create, configure, and test an Agentix AI agent from the dashboard in about five minutes."
+description: "Create, configure, and test an Agentix AI agent from the dashboard in a couple of minutes."
 ---
 
-An **agent** in Agentix is a configurable assistant — a model + a system prompt + an optional voice + optional tools and knowledge. This guide walks you through creating one in the dashboard, talking to it from the built-in test panel, and (optionally) attaching it to a knowledge store or tool.
+An **agent** in Agentix is a configurable assistant — a model + a system prompt + an optional voice + optional tools. This guide walks you through creating one from the dashboard, configuring it on the agent detail page, and talking to it from the built-in test panel.
 
 ## Prerequisites
 
@@ -18,42 +18,34 @@ From the left navigation, click **Agents**. You'll land on `/agents`, which list
   ![Empty Agents list](/images/guides/build-your-first-agent/01-agents-list-empty.png)
 </Frame>
 
-Click **+ Create Agent** to open the four-step creation wizard.
+Click **+ Create Agent** to open the create dialog.
 
-## Step 2: Pick a starting template
+## Step 2: Create the agent
 
-The wizard opens on **Step 1 — Templates**. You have two options:
+The **Create New Agent** dialog asks for just three things — everything else is configured *after* the agent exists:
 
-- **Blank Template** — start from scratch (recommended if you have a specific use case in mind).
-- **Templates carousel** — pre-built starting points like *Support Agent*, *Customer Service Agent*, *Banking Assistant*, *Appointment Setter*, or *Meeting Summarizer*. Each template pre-fills the system prompt and basic settings; you can edit everything afterwards.
+1. **Name** — at least 5 characters. Shown in lists, logs, and webhooks.
+2. **Language** — the agent's primary language. Agentix uses it to pick sensible default text, speech-to-text, and text-to-speech models for you.
+3. **Voice Enabled** — on by default. Leave it on if the agent will make/receive phone or browser calls; turn it off for a chat-only agent. You can flip this later — see [Voice calls](/guides/voice-calls).
 
-<Frame caption="Step 1 of the Create Agent wizard.">
-  ![Template picker](/images/guides/build-your-first-agent/02-create-step1-template.png)
+<Frame caption="The Create New Agent dialog — name, language, and a voice toggle. Agentix fills in default models and a placeholder system prompt for you.">
+  ![Create Agent modal](/images/guides/build-your-first-agent/02-create-agent-modal.png)
 </Frame>
 
-For this guide, click the **Blank Template** card. The wizard advances to Step 2.
+Click **Create Agent**. Agentix creates a blank agent — with default models for your language and a placeholder system prompt — and redirects you to `/agents/{id}`, the agent detail / edit page.
 
-## Step 3: Fill in general settings
+<Note>
+  Creation is a single step today — there's no multi-step template wizard. The system prompt, tools, and other settings are all configured on the detail page once the agent exists (next step).
+</Note>
 
-**Step 2 — General Settings** captures the basics:
+## Step 3: Configure the agent
 
-1. **Voice Enabled** — leave off for a chat-only agent; turn on if you want the agent to make/receive phone calls. (You can flip this later — see [Voice calls](/guides/voice-calls).)
-2. **Name** — at least 5 characters. Shown in lists, logs, and webhooks.
-3. **Language** — primary language for the agent. Determines which TTS/STT models and voices are offered later.
-4. **Role** — one-line summary of what the agent does (e.g. *Order-status assistant*).
-5. **Description** — longer description; visible in the dashboard and analytics.
+The detail page has two columns:
 
-<Frame caption="General Settings — keep these short. The Role and Description help your teammates find this agent later; they aren't sent to the LLM.">
-  ![General Settings form](/images/guides/build-your-first-agent/03-create-step2-general.png)
-</Frame>
+- **Left** — the **System Prompt**, model, and language. A new agent starts with a placeholder prompt (*"This is a blank template, update the system prompt to fit your needs"*) — replace it with your own. Use the expand icon at the top-right of the textarea for a full-screen editor on longer prompts.
+- **Right** — tabs for **Calls**, **Chat**, **Behavior**, **Functions**, **Multi-agents**, **Analytics**, and **Widgets**. Each tab configures one slice of the agent.
 
-Click **Next**.
-
-## Step 4: Write the system prompt
-
-**Step 3 — System Prompt** is the most important step. The system prompt defines persona, tone, scope, and guardrails.
-
-A good starter prompt for the order-status example:
+A good starter system prompt for an order-status example:
 
 ```text
 You help customers track their orders. Be concise and friendly.
@@ -62,43 +54,21 @@ You help customers track their orders. Be concise and friendly.
 - If the user asks anything unrelated to orders, politely redirect.
 ```
 
-<Frame caption="System prompt editor. Use the expand icon (top right of the textarea) to open the full-screen editor for longer prompts.">
-  ![System Prompt step](/images/guides/build-your-first-agent/04-create-step3-prompt.png)
+<Frame caption="Agent detail page. Edit the system prompt on the left, then click Save Changes (top right). The right-hand tabs configure calls, chat, behavior, functions, and more.">
+  ![Agent detail overview](/images/guides/build-your-first-agent/03-agent-detail-overview.png)
 </Frame>
 
-Click **Next**.
+Click **Save Changes** in the top right whenever you edit the prompt or any setting.
 
-## Step 5: (Optional) Attach knowledge and tools
-
-**Step 4 — Knowledge & Tools** lets you optionally attach:
-
-- **Knowledge Base** — a previously-created knowledge store the agent will retrieve from. Skip for now if you don't have one; see [Chat with RAG](/guides/chat-with-rag) for how to create one.
-- **Tools** — function/API tools the agent can invoke during a conversation. Skip for now; see [Tools](/guides/tools).
-
-<Frame caption="Knowledge & Tools — both fields are optional. You can attach or detach at any time from the agent's detail page.">
-  ![Knowledge and Tools step](/images/guides/build-your-first-agent/05-create-step4-attach.png)
-</Frame>
-
-Click **Create Agent**. You'll be redirected to `/agents/{id}` — the agent detail / edit page.
-
-## Step 6: Test the agent
-
-The detail page has two columns:
-
-- **Left** — system prompt, model, and language. Edit any of these and click **Save Changes** in the top right.
-- **Right** — tabs for **Calls**, **Chat**, **Functions**, **Multi-agents**, **Analytics**, **Widgets**. Each tab configures one slice of the agent.
+## Step 4: Test the agent
 
 In the header you'll see a green **Test Agent** button.
 
-<Frame caption="Agent detail page. Click Test Agent (green button, top right) to start a live conversation.">
-  ![Agent detail overview](/images/guides/build-your-first-agent/06-agent-detail-overview.png)
+<Frame caption="Close-up of the Test Agent button in the page header.">
+  ![Test Agent button](/images/guides/build-your-first-agent/04-test-agent-button.png)
 </Frame>
 
 Click **Test Agent**. A LiveKit voice room or chat panel opens (depending on the **Voice Enabled** toggle). Type or speak a question your prompt should handle — e.g. *"What's the status of my order 1234?"* — and verify the agent stays in character.
-
-<Frame caption="Close-up of the Test Agent button in the page header.">
-  ![Test Agent button](/images/guides/build-your-first-agent/07-agent-test-call-button.png)
-</Frame>
 
 If you also want to share the agent without giving testers dashboard access, use the two small icons next to **Test Agent**:
 
@@ -113,7 +83,7 @@ Your agent is wired up if all of the following are true:
 
 - It appears at `/agents` with the correct name and **Updated At** timestamp.
 - Clicking **Test Agent** opens a working test panel without errors.
-- The agent's replies follow the system prompt (correct persona, refuses out-of-scope questions).
+- The agent's replies follow the system prompt you saved (correct persona, refuses out-of-scope questions).
 - The **Analytics** tab on the detail page starts collecting session data after your first test.
 
 ## Common next steps
@@ -135,7 +105,7 @@ Your agent is wired up if all of the following are true:
 
 ## API alternative
 
-If you'd rather create the agent over HTTP — for CI, scripts, or back-office tooling — every step above maps directly to the [Agents API](/api-reference/agents/create). The end-to-end curl flow is documented in the [Quickstart](/quickstart):
+If you'd rather create the agent over HTTP — for CI, scripts, or back-office tooling — you can set the name, model, **and** system prompt in a single call (the API isn't limited to the dashboard's three fields):
 
 ```bash
 curl https://api.agntix.ai/v1/chat/agents \

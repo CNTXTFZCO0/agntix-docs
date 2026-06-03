@@ -64,21 +64,20 @@ Wait for every document to reach **Ready** before testing. Processing time scale
 
 ## Step 4: Attach the store to an agent
 
-Open your agent at `/agents/{id}`. On the right column, switch to the **Knowledge** tab (it's the book icon).
+<Warning>
+  Attaching a knowledge store **from the dashboard is not available in the current release** — the agent's in-dashboard **Knowledge** tab is temporarily disabled while it's being finalized. For now, attach the store over the API as shown below; the dashboard flow will return in a future release.
+</Warning>
 
-1. Pick your store from the **Select Knowledge Base** dropdown.
-2. Adjust retrieval knobs as needed:
-   - **Search Type** — vector / hybrid / keyword. *Hybrid* is the safest default.
-   - **Top K** — how many chunks to retrieve (range 1–100; default ~6). Higher = more context, higher cost.
-   - **Top N** — how many chunks to keep after reranking (must be ≤ Top K).
-   - **Agentic RAG** — when on, the agent rewrites the user's question into a better retrieval query before searching. Slower but higher recall on conversational follow-ups.
-   - **Rerank** — runs Cohere's reranker over the Top K results. Adds ~150 ms; significantly cuts hallucinations.
+Copy the store's ID from the Knowledge Store detail view (or from the create-store API response), then `PATCH` your agent to enable RAG and point it at the store:
 
-<Frame caption="Knowledge tab on the agent detail page. Top K / Top N sliders control retrieval breadth and depth.">
-  ![Attach knowledge to agent](/images/guides/chat-with-rag/06-agent-attach-knowledge.png)
-</Frame>
+```bash
+curl -X PATCH https://api.agntix.ai/v1/chat/agents/$AGENT_ID \
+  -H "x-api-key: $AGNTIX_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{ "config": { "ragEnabled": true, "knowledgeStoreId": "ks_…" } }'
+```
 
-Click **Save Changes** in the page header.
+Retrieval behaviour — search type, **Top K** / **Top N**, **Agentic RAG**, and **Rerank** — defaults to sensible values. To tune it, set the matching `config` fields; see the **Agents** section of the [API Reference](/api-reference/agents/update) for the exact field names and ranges.
 
 ## Step 5: Test with a RAG-grounded question
 
@@ -93,7 +92,7 @@ Compare against the same question with the store *detached* — the difference s
 ## Verify it works
 
 - Every uploaded document shows **Ready** in the store detail view.
-- The agent's Knowledge tab shows the store selected after saving.
+- The agent's `config` shows `ragEnabled: true` with your `knowledgeStoreId` (check via `GET /v1/chat/agents/{id}`).
 - Test Agent answers contain facts that are only in your documents.
 - The session log (Analytics tab or `/logs-history`) shows the retrieved chunks per message.
 
@@ -118,7 +117,7 @@ Compare against the same question with the store *detached* — the difference s
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| Agent ignores the store | Document still **Processing**, or store not saved on the agent | Wait for **Ready**, then re-save the agent |
+| Agent ignores the store | Document still **Processing**, or RAG not enabled on the agent | Wait for **Ready**; confirm the agent's `config.ragEnabled` is `true` and `knowledgeStoreId` is set |
 | Wrong document retrieved | **Top K** too low, or two stores overlap | Raise Top K to 8–10, or split overlapping content |
 | Slow responses | Rerank + Agentic RAG both on | Turn off Agentic RAG first; keep rerank |
 | "Quota exceeded" upload error | Org embedding quota | Contact support; quotas are per-plan |
