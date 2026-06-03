@@ -9,7 +9,11 @@ import AuthCallout from "/snippets/auth-callout.mdx";
 
 Agentix delivers webhooks via [Svix](https://svix.com). Configure endpoints from the dashboard's **Developer** section — see [Webhooks overview](/webhooks/overview).
 
-Voice and chat sessions emit two events: `session.created` (when the call/conversation starts) and `session.ended` (when it closes, with the full post-call analysis attached). Several auxiliary events are emitted for chat platform, messages, usage, and infra changes — they're listed at the bottom of this page.
+Voice and chat sessions emit two events **today**: `session.created` (when the call/conversation starts) and `session.ended` (when it closes, with the full post-call analysis attached). The other events on this page are on the roadmap — documented so you can design against them, but **not delivered as webhooks yet**.
+
+<Info>
+**Available now:** `session.created` and `session.ended`. Every event marked <Badge color="orange">Planned</Badge> below is **not emitted to webhook endpoints yet** — don't build hard dependencies on it. `session.updated` and `knowledge_store.updated` currently exist only as in-app real-time (SSE) signals, not as webhooks.
+</Info>
 
 <Warning>
 Treat the top-level `id` (session UUID) as the **idempotency key**. Don't double-process the same `id`. Webhooks may be retried on non-`2xx` responses — respond `2xx` once you've durably enqueued the event.
@@ -17,7 +21,7 @@ Treat the top-level `id` (session UUID) as the **idempotency key**. Don't double
 
 ---
 
-## `session.created`
+## `session.created` <Badge color="green">Available</Badge>
 
 Fired when a session is **initiated** — for outbound voice calls, this is *before pickup*. Use it to lock the originating task as "in-flight".
 
@@ -59,7 +63,7 @@ Fired when a session is **initiated** — for outbound voice calls, this is *bef
 
 ---
 
-## `session.ended`
+## `session.ended` <Badge color="green">Available</Badge>
 
 Fired once when a session closes (manually, via timeout, on call hangup, or on `ttl` expiry). Carries the full post-call **`analysis`** block — see [Post-call analysis](/guides/post-call-analysis) for what each field means.
 
@@ -146,9 +150,11 @@ The webhook is **summary-grade**, not transcript-grade. The full message-by-mess
 
 ---
 
-## `session.updated` <Tag>chat</Tag>
+## `session.updated` <Badge color="orange">Planned</Badge> <Badge color="gray">chat</Badge>
 
 Emitted for **chat** sessions when state, agent assignment, intelligence summary, or analytics records change mid-session. Voice/outbound calls do **not** emit this event — they go straight from `session.created` to `session.ended`.
+
+<Note>Today this fires only as an **in-app real-time (SSE)** signal for live dashboards. It is **not yet delivered to webhook endpoints**.</Note>
 
 <ResponseField name="id" type="string">Session id (UUID).</ResponseField>
 <ResponseField name="eventType" type="string">Constant: `"session.updated"`.</ResponseField>
@@ -167,9 +173,11 @@ Emitted for **chat** sessions when state, agent assignment, intelligence summary
 
 ---
 
-## `message.added`
+## `message.added` <Badge color="orange">Planned</Badge>
 
 A user, assistant, or tool message was appended to a session.
+
+<Note>Not emitted to webhook endpoints yet. Until it ships, poll [`GET /api/v1/chat/sessions/{id}/messages`](/api-reference/chat/messages/list) or consume the in-app real-time stream.</Note>
 
 <ResponseField name="data.sessionId" type="string" />
 <ResponseField name="data.messageId" type="string">The message id (`msg_…`).</ResponseField>
@@ -193,9 +201,11 @@ A user, assistant, or tool message was appended to a session.
 
 ---
 
-## `usage.updated`
+## `usage.updated` <Badge color="orange">Planned</Badge>
 
 Aggregate usage metrics for the org changed (rolled up every 60s).
+
+<Note>Not emitted to webhook endpoints yet.</Note>
 
 <ResponseField name="data.period" type="object">`{ "start": ISO, "end": ISO }`.</ResponseField>
 <ResponseField name="data.metrics" type="object">
@@ -204,9 +214,11 @@ Aggregate usage metrics for the org changed (rolled up every 60s).
 
 ---
 
-## `subscription.updated`
+## `subscription.updated` <Badge color="orange">Planned</Badge>
 
 Plan change, payment method update, cancel, or resume.
+
+<Note>Not emitted to webhook endpoints yet.</Note>
 
 <ResponseField name="data.subscriptionId" type="string" />
 <ResponseField name="data.status" type="enum">`active`, `past_due`, `canceled`, `paused`.</ResponseField>
@@ -214,9 +226,11 @@ Plan change, payment method update, cancel, or resume.
 
 ---
 
-## `knowledge_store.updated`
+## `knowledge_store.updated` <Badge color="orange">Planned</Badge>
 
 A document finished processing (chunked + embedded + indexed).
+
+<Note>Today this fires only as an **in-app real-time (SSE)** signal (named `knowledge.store.updated`). It is **not yet delivered to webhook endpoints**.</Note>
 
 <ResponseField name="data.knowledgeStoreId" type="string" />
 <ResponseField name="data.documentId" type="string" />
