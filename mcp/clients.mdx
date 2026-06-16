@@ -1,0 +1,118 @@
+---
+title: "Client Setup"
+description: "Step-by-step configuration for Claude Desktop, Cursor, and any other MCP client."
+---
+
+Every client points at the same [endpoint](/mcp/connect) and authenticates with your organization API key. Pick your client below.
+
+<Tabs>
+  <Tab title="Claude Desktop">
+    Claude Desktop loads MCP servers from its `claude_desktop_config.json`.
+
+    <Steps>
+      <Step title="Open the config file">
+        In Claude Desktop, go to **Settings → Developer → Edit Config**, or open the file directly:
+
+        ```text
+        macOS:   ~/Library/Application Support/Claude/claude_desktop_config.json
+        Windows: %APPDATA%\Claude\claude_desktop_config.json
+        ```
+      </Step>
+
+      <Step title="Add the Agentix server">
+        Claude Desktop connects to remote servers through the `mcp-remote` bridge:
+
+        ```json
+        {
+          "mcpServers": {
+            "agntix": {
+              "command": "npx",
+              "args": [
+                "-y",
+                "mcp-remote",
+                "https://mcp.agntix.ai/v1",
+                "--header",
+                "x-api-key:pk_live_xxxxxxxxxxxxxxxxxxxxxxxx"
+              ]
+            }
+          }
+        }
+        ```
+      </Step>
+
+      <Step title="Restart Claude Desktop">
+        Fully quit and reopen the app. The Agentix tools appear under the tools (plug) icon in the
+        composer. Ask *"list my Agentix agents"* to confirm.
+      </Step>
+    </Steps>
+  </Tab>
+
+  <Tab title="Cursor">
+    Cursor supports remote MCP servers directly.
+
+    <Steps>
+      <Step title="Open the MCP config">
+        Edit `~/.cursor/mcp.json` (global) or `.cursor/mcp.json` (per-project), or use
+        **Settings → MCP → Add new MCP server**.
+      </Step>
+
+      <Step title="Add the Agentix server">
+        ```json
+        {
+          "mcpServers": {
+            "agntix": {
+              "url": "https://mcp.agntix.ai/v1",
+              "headers": {
+                "x-api-key": "pk_live_xxxxxxxxxxxxxxxxxxxxxxxx"
+              }
+            }
+          }
+        }
+        ```
+      </Step>
+
+      <Step title="Enable it">
+        Open **Settings → MCP** and confirm the `agntix` server shows a green dot and its tools are
+        listed. Toggle it on if needed.
+      </Step>
+    </Steps>
+  </Tab>
+
+  <Tab title="Other clients">
+    Any MCP-compatible client (ChatGPT custom connectors, the MCP SDKs, or your own agent) can connect
+    using the remote URL and an `x-api-key` header.
+
+    ```json
+    {
+      "mcpServers": {
+        "agntix": {
+          "url": "https://mcp.agntix.ai/v1",
+          "headers": {
+            "x-api-key": "pk_live_xxxxxxxxxxxxxxxxxxxxxxxx"
+          }
+        }
+      }
+    }
+    ```
+
+    If your client only supports local/`stdio` servers, wrap the endpoint with the
+    [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) bridge as shown in the Claude Desktop tab.
+  </Tab>
+</Tabs>
+
+<Tip>
+  Use a **dedicated, scoped API key** for each client (for example a read-only key for an assistant
+  that should only summarize data). You can see each key's last-used timestamp on the
+  [API Keys](https://app.agntix.ai/settings/api-keys) dashboard and revoke it instantly.
+</Tip>
+
+## Troubleshooting
+
+| Symptom | Likely cause |
+|---|---|
+| Tools don't appear | Client not restarted, or the server failed to start — check the client's MCP logs. |
+| `401 Unauthorized` | Missing or invalid `x-api-key` / Bearer token. |
+| `403 Forbidden` | The key is valid but lacks the scope for that tool. Issue a key with the right scopes. |
+| `npx` errors in Claude Desktop | Node.js 20+ must be installed and on your `PATH` for the `mcp-remote` bridge. |
+
+See the full list on the [error codes](/errors/error-codes) page.

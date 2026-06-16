@@ -1,0 +1,86 @@
+---
+title: "Connecting"
+description: "Server URL, transport, and authentication for the Agentix MCP server."
+---
+
+The Agentix MCP server is a **remote** MCP server. Any client that speaks the Model Context Protocol can connect to it over HTTP and authenticate with an organization API key.
+
+## Endpoint
+
+```text
+https://mcp.agntix.ai/v1
+```
+
+<Info>
+  Confirm the production MCP endpoint for your deployment before publishing. The host follows the same
+  convention as the rest of the platform (`api.agntix.ai`, `app.agntix.ai`, `status.agntix.ai`); update
+  this value if your environment differs.
+</Info>
+
+## Transport
+
+| Transport | Use it when |
+|---|---|
+| **Streamable HTTP** (recommended) | Your client supports remote MCP servers natively (Cursor, recent Claude clients, custom SDK clients). |
+| **stdio bridge** | Your client only supports local/`stdio` servers. Run the [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) adapter, which proxies a local stdio server to the remote HTTP endpoint. |
+
+## Authentication
+
+The MCP server uses the **same credentials as the REST API** — see [Authentication](/authentication) for how to create a key.
+
+| Method | Header forwarded upstream | When to use |
+|---|---|---|
+| **API Key** (recommended) | `x-api-key: pk_live_…` | Server-to-server, local dev, scripts |
+| **Bearer JWT** | `Authorization: Bearer <token>` | First-party apps with an existing Clerk session |
+
+The scopes on the key apply to every tool call. A `chat:read` key can only invoke read tools; write/delete tools return `403 Forbidden`.
+
+<Warning>
+  An API key grants access to your whole organization. Store it in your client's secret/credential
+  field — never paste it into a shared config that gets committed to git. Prefer a **scoped, dedicated
+  key** for MCP usage.
+</Warning>
+
+## Connection config
+
+Most clients accept either a remote URL with headers, or a stdio command. Use whichever your client supports.
+
+<CodeGroup>
+
+```json Remote (Streamable HTTP)
+{
+  "mcpServers": {
+    "agntix": {
+      "url": "https://mcp.agntix.ai/v1",
+      "headers": {
+        "x-api-key": "pk_live_xxxxxxxxxxxxxxxxxxxxxxxx"
+      }
+    }
+  }
+}
+```
+
+```json stdio bridge (mcp-remote)
+{
+  "mcpServers": {
+    "agntix": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://mcp.agntix.ai/v1",
+        "--header",
+        "x-api-key:pk_live_xxxxxxxxxxxxxxxxxxxxxxxx"
+      ]
+    }
+  }
+}
+```
+
+</CodeGroup>
+
+## Verify the connection
+
+Once configured, ask your assistant to list its Agentix tools, or have it run a read-only action such as *"list my Agentix agents."* A successful response confirms the server URL and key are correct. A `401` means the key is missing or invalid; a `403` means the key lacks the scope for that tool.
+
+See the [Client Setup](/mcp/clients) page for step-by-step configuration of Claude Desktop, Cursor, and other clients.
