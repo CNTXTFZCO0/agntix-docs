@@ -1,8 +1,8 @@
 /* eslint-disable no-console */
 /**
- * sync-openapi.ts — Fetch the merged OpenAPI spec from the Agentix gateway,
+ * sync-openapi.ts — Fetch the merged OpenAPI spec from the Agntix gateway,
  * apply an allowlist + denylist (defense in depth), and commit the result to
- * `openapi/agentix.json`. Mintlify reads only the committed file.
+ * `openapi/agntix.json`. Mintlify reads only the committed file.
  *
  * The gateway already strips internal routes via `isInternalPath`. This script
  * re-applies the same intent so a misconfigured gateway can never silently
@@ -25,7 +25,7 @@ import { fileURLToPath } from "node:url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const REPO_ROOT = resolve(__dirname, "..");
-const OUTPUT_FILE = resolve(REPO_ROOT, "openapi/agentix.json");
+const OUTPUT_FILE = resolve(REPO_ROOT, "openapi/agntix.json");
 
 const GATEWAY_BASE_URL = process.env.GATEWAY_BASE_URL ?? "https://api.agntix.ai";
 const SPEC_URL = `${GATEWAY_BASE_URL.replace(/\/$/, "")}/docs/json`;
@@ -157,11 +157,11 @@ function filterSpec(spec: OpenApiSpec): { spec: OpenApiSpec; violations: string[
 
   out.servers = [{ url: GATEWAY_BASE_URL, description: "Production" }];
   out.info = {
-    title: "Agentix API",
+    title: "Agntix API",
     version: (spec.info?.version as string) ?? "1.0.0",
     description:
       (spec.info?.description as string) ??
-      "The public Agentix REST API for chat, voice, and webhook integrations.",
+      "The public Agntix REST API for chat, voice, and webhook integrations.",
     contact: { email: "support@agntix.ai", url: "https://agntix.ai" },
   };
 

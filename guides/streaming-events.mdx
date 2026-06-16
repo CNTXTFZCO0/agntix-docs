@@ -7,7 +7,7 @@ import AuthCallout from "/snippets/auth-callout.mdx";
 
 <AuthCallout />
 
-Agentix exposes a single Server-Sent Events stream per organization at `GET /v1/chat/events/stream`. Use it to update dashboards, push notifications, or trigger downstream automation.
+Agntix exposes a single Server-Sent Events stream per organization at `GET /v1/chat/events/stream`. Use it to update dashboards, push notifications, or trigger downstream automation.
 
 ## Connect
 
@@ -25,16 +25,16 @@ es.addEventListener("message.added", (e) => {
 
 ## Event types
 
-| Event | Triggered when |
-|---|---|
-| `session.started` | A new chat or voice session is created |
-| `session.updated` | Session state, agent assignment, or analytics change |
-| `session.ended` | Session is closed (manually, expired, or call ended) |
-| `message.added` | A new message is added to a session |
-| `usage.updated` | Usage metrics for the org change |
-| `subscription.updated` | Plan change, cancel, or resume |
-| `knowledge_store.updated` | A knowledge store document finishes processing |
-| `heartbeat` | Sent every 30s; use to detect a dead connection |
+| Event                     | Triggered when                                       |
+| ------------------------- | ---------------------------------------------------- |
+| `session.started`         | A new chat or voice session is created               |
+| `session.updated`         | Session state, agent assignment, or analytics change |
+| `session.ended`           | Session is closed (manually, expired, or call ended) |
+| `message.added`           | A new message is added to a session                  |
+| `usage.updated`           | Usage metrics for the org change                     |
+| `subscription.updated`    | Plan change, cancel, or resume                       |
+| `knowledge_store.updated` | A knowledge store document finishes processing       |
+| `heartbeat`               | Sent every 30s; use to detect a dead connection      |
 
 ## Reconnecting
 

@@ -1,74 +1,74 @@
 ---
 title: "Tools Reference"
-description: "Every tool the Agentix MCP server exposes, grouped by resource, with the REST endpoint it maps to."
+description: "Every tool the Agntix MCP server exposes, grouped by resource, with the REST endpoint it maps to."
 ---
 
 MCP tools follow a `resource_action` naming convention and map 1:1 to the documented REST endpoints. The scopes on your [API key](/authentication) decide which tools are callable — read tools need `:read`, mutations need `:write`, and deletions need `manage`.
 
 <Note>
   The authoritative, always-current list is whatever the server returns from `tools/list` — ask your
-  client to "list available Agentix tools." The catalog below is the stable set grouped by resource.
+  client to "list available Agntix tools." The catalog below is the stable set grouped by resource.
 </Note>
 
 ## Agents
 
-| Tool | Description | Maps to |
-|---|---|---|
-| `agents_list` | List agents in the organization | [List agents](/api-reference/agents/list) |
+| Tool            | Description                                   | Maps to                                      |
+| --------------- | --------------------------------------------- | -------------------------------------------- |
+| `agents_list`   | List agents in the organization               | [List agents](/api-reference/agents/list)    |
 | `agents_create` | Create an agent (model, prompt, tools, voice) | [Create agent](/api-reference/agents/create) |
-| `agents_get` | Fetch a single agent by ID | [Get agent](/api-reference/agents/get) |
-| `agents_update` | Update an agent's configuration | [Update agent](/api-reference/agents/update) |
-| `agents_delete` | Delete an agent | [Delete agent](/api-reference/agents/delete) |
+| `agents_get`    | Fetch a single agent by ID                    | [Get agent](/api-reference/agents/get)       |
+| `agents_update` | Update an agent's configuration               | [Update agent](/api-reference/agents/update) |
+| `agents_delete` | Delete an agent                               | [Delete agent](/api-reference/agents/delete) |
 
 ## Chat
 
-| Tool | Description | Maps to |
-|---|---|---|
-| `chat_session_create` | Open a chat session against an agent | [Create session](/api-reference/chat/sessions/create) |
-| `chat_session_get` | Fetch a session by ID | [Get session](/api-reference/chat/sessions/get) |
-| `chat_session_list` | List chat sessions | [List sessions](/api-reference/chat/sessions/list) |
-| `chat_session_close` | Close an open session | [Close session](/api-reference/chat/sessions/close) |
-| `chat_message_send` | Send a user message and get the reply | [Send message](/api-reference/chat/messages/send) |
-| `chat_message_list` | Read a session transcript | [List messages](/api-reference/chat/messages/list) |
+| Tool                  | Description                           | Maps to                                               |
+| --------------------- | ------------------------------------- | ----------------------------------------------------- |
+| `chat_session_create` | Open a chat session against an agent  | [Create session](/api-reference/chat/sessions/create) |
+| `chat_session_get`    | Fetch a session by ID                 | [Get session](/api-reference/chat/sessions/get)       |
+| `chat_session_list`   | List chat sessions                    | [List sessions](/api-reference/chat/sessions/list)    |
+| `chat_session_close`  | Close an open session                 | [Close session](/api-reference/chat/sessions/close)   |
+| `chat_message_send`   | Send a user message and get the reply | [Send message](/api-reference/chat/messages/send)     |
+| `chat_message_list`   | Read a session transcript             | [List messages](/api-reference/chat/messages/list)    |
 
 ## Voice
 
-| Tool | Description | Maps to |
-|---|---|---|
-| `voice_voices_list` | List available TTS voices | [Voices](/api-reference/voice/voices) |
-| `voice_models_list` | List STT/TTS models | [Models](/api-reference/voice/models) |
-| `voice_providers_list` | List voice providers | [Providers](/api-reference/voice/providers) |
+| Tool                   | Description                     | Maps to                                                      |
+| ---------------------- | ------------------------------- | ------------------------------------------------------------ |
+| `voice_voices_list`    | List available TTS voices       | [Voices](/api-reference/voice/voices)                        |
+| `voice_models_list`    | List STT/TTS models             | [Models](/api-reference/voice/models)                        |
+| `voice_providers_list` | List voice providers            | [Providers](/api-reference/voice/providers)                  |
 | `voice_session_create` | Start a real-time voice session | [Create voice session](/api-reference/voice/sessions-create) |
 
 ## Tools
 
-| Tool | Description | Maps to |
-|---|---|---|
-| `tools_list` | List API/function tools | [List tools](/api-reference/tools/list) |
-| `tools_create` | Create a tool | [Create tool](/api-reference/tools/create) |
-| `tools_get` | Fetch a tool by ID | [Get tool](/api-reference/tools/get) |
-| `tools_update` | Update a tool | [Update tool](/api-reference/tools/update) |
-| `tools_delete` | Delete a tool | [Delete tool](/api-reference/tools/delete) |
+| Tool           | Description             | Maps to                                    |
+| -------------- | ----------------------- | ------------------------------------------ |
+| `tools_list`   | List API/function tools | [List tools](/api-reference/tools/list)    |
+| `tools_create` | Create a tool           | [Create tool](/api-reference/tools/create) |
+| `tools_get`    | Fetch a tool by ID      | [Get tool](/api-reference/tools/get)       |
+| `tools_update` | Update a tool           | [Update tool](/api-reference/tools/update) |
+| `tools_delete` | Delete a tool           | [Delete tool](/api-reference/tools/delete) |
 
 ## Phone Numbers
 
-| Tool | Description | Maps to |
-|---|---|---|
-| `phone_numbers_list` | List provisioned phone numbers | [List numbers](/api-reference/phone-numbers/list) |
-| `phone_numbers_create` | Provision a phone number | [Create number](/api-reference/phone-numbers/create) |
-| `phone_numbers_outbound_call` | Trigger an outbound call | [Outbound call](/api-reference/phone-numbers/outbound-call) |
+| Tool                          | Description                    | Maps to                                                     |
+| ----------------------------- | ------------------------------ | ----------------------------------------------------------- |
+| `phone_numbers_list`          | List provisioned phone numbers | [List numbers](/api-reference/phone-numbers/list)           |
+| `phone_numbers_create`        | Provision a phone number       | [Create number](/api-reference/phone-numbers/create)        |
+| `phone_numbers_outbound_call` | Trigger an outbound call       | [Outbound call](/api-reference/phone-numbers/outbound-call) |
 
 ## Analytics & account
 
 These map to the OpenAPI-generated resources under [More Resources](/api-reference/introduction).
 
-| Tool | Description |
-|---|---|
-| `analytics_query` | Pull usage, cost, and call-outcome metrics |
-| `models_list` | List models available to the organization |
-| `contacts_list` | List contacts |
-| `call_campaigns_list` | List outbound call campaigns |
-| `api_keys_list` | List organization API keys (never returns secret values) |
+| Tool                  | Description                                              |
+| --------------------- | -------------------------------------------------------- |
+| `analytics_query`     | Pull usage, cost, and call-outcome metrics               |
+| `models_list`         | List models available to the organization                |
+| `contacts_list`       | List contacts                                            |
+| `call_campaigns_list` | List outbound call campaigns                             |
+| `api_keys_list`       | List organization API keys (never returns secret values) |
 
 ## Example interaction
 

@@ -7,16 +7,16 @@ import AuthCallout from "/snippets/auth-callout.mdx";
 
 <AuthCallout />
 
-Once a call ends, Agentix runs an analysis pass over the transcript. Configure what to extract on the agent's **Analytics tab** — open any agent from **Agents** in the left nav, then switch to the **Analytics** tab on the right-hand panel.
+Once a call ends, Agntix runs an analysis pass over the transcript. Configure what to extract on the agent's **Analytics tab** — open any agent from **Agents** in the left nav, then switch to the **Analytics** tab on the right-hand panel.
 
 Four independent toggles are available. Enable only the ones you need.
 
-| Toggle | What it returns | Where it appears |
-|--------|------------------|------------------|
-| Intent Recognition | Best-fit intent against your custom list | `analysis.intent.*` |
-| Resolution Analysis | Whether the call achieved its objective | `analysis.resolution.*` |
-| Sentiment | Score and label per call | `analysis.sentiment.*` |
-| Data Extraction | Structured fields you defined | `analysis.extractedData.<name>` |
+| Toggle              | What it returns                          | Where it appears                |
+| ------------------- | ---------------------------------------- | ------------------------------- |
+| Intent Recognition  | Best-fit intent against your custom list | `analysis.intent.*`             |
+| Resolution Analysis | Whether the call achieved its objective  | `analysis.resolution.*`         |
+| Sentiment           | Score and label per call                 | `analysis.sentiment.*`          |
+| Data Extraction     | Structured fields you defined            | `analysis.extractedData.<name>` |
 
 All four surface in the `analysis` block of the [`session.ended` webhook](/webhooks/events) and in [`GET /api/v1/chat/sessions/{id}`](/api-reference/chat/sessions/get).
 
@@ -119,7 +119,7 @@ Returns a score and label per call:
 
 ## Data Extraction
 
-Define a structured schema and Agentix will pull the values out of the transcript.
+Define a structured schema and Agntix will pull the values out of the transcript.
 
 Click **+ Add Data Extraction** and define one schema entry at a time. Each entry asks for:
 
@@ -131,13 +131,13 @@ Repeat for each field. There is no hard cap, but **five tight fields beat fiftee
 
 Example schema for a delivery-confirmation call:
 
-| Name | Description | Type |
-|------|-------------|------|
-| `slotConfirmed` | True if the customer agreed to a specific delivery slot. | Boolean |
-| `preferredDay` | The day the customer chose for delivery. | String |
-| `preferredTimeWindow` | Time window the customer preferred. | Enum (`Morning`, `Afternoon`, `Evening`) |
-| `callbackRequested` | True if the customer asked to be called back later. | Boolean |
-| `callOutcome` | Short categorical outcome. | Enum (`Confirmed`, `Rescheduled`, `Unavailable`, `WrongNumber`) |
+| Name                  | Description                                              | Type                                                            |
+| --------------------- | -------------------------------------------------------- | --------------------------------------------------------------- |
+| `slotConfirmed`       | True if the customer agreed to a specific delivery slot. | Boolean                                                         |
+| `preferredDay`        | The day the customer chose for delivery.                 | String                                                          |
+| `preferredTimeWindow` | Time window the customer preferred.                      | Enum (`Morning`, `Afternoon`, `Evening`)                        |
+| `callbackRequested`   | True if the customer asked to be called back later.      | Boolean                                                         |
+| `callOutcome`         | Short categorical outcome.                               | Enum (`Confirmed`, `Rescheduled`, `Unavailable`, `WrongNumber`) |
 
 Extracted values surface under `analysis.extractedData.<name>` in the webhook and the session detail API:
 

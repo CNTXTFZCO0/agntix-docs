@@ -1,8 +1,8 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "maple",
-  "name": "Agentix",
-  "description": "Build, deploy, and operate AI chat and voice agents with the Agentix API.",
+  "name": "Agntix",
+  "description": "Build, deploy, and operate AI chat and voice agents with the Agntix API.",
   "colors": {
     "primary": "#7c3aed",
     "light": "#a78bfa",
@@ -44,22 +44,37 @@
       {
         "header": "Product",
         "items": [
-          { "label": "Dashboard", "href": "https://app.agntix.ai" },
-          { "label": "Pricing", "href": "https://agntix.ai/pricing" },
-          { "label": "Changelog", "href": "/changelog" }
+          {
+            "label": "Dashboard",
+            "href": "https://app.agntix.ai"
+          },
+          {
+            "label": "Pricing",
+            "href": "https://agntix.ai/pricing"
+          },
+          {
+            "label": "Changelog",
+            "href": "/changelog"
+          }
         ]
       },
       {
         "header": "Resources",
         "items": [
-          { "label": "Status", "href": "https://status.agntix.ai" },
-          { "label": "Support", "href": "mailto:support@agntix.ai" }
+          {
+            "label": "Status",
+            "href": "https://status.agntix.ai"
+          },
+          {
+            "label": "Support",
+            "href": "mailto:support@agntix.ai"
+          }
         ]
       }
     ]
   },
   "search": {
-    "prompt": "Search the Agentix docs..."
+    "prompt": "Search the Agntix docs..."
   },
   "seo": {
     "indexing": "navigable",
@@ -72,7 +87,11 @@
       "display": "interactive"
     },
     "examples": {
-      "languages": ["curl", "javascript", "python"]
+      "languages": [
+        "curl",
+        "javascript",
+        "python"
+      ]
     },
     "mdx": {
       "auth": {
@@ -89,7 +108,12 @@
         "groups": [
           {
             "group": "Getting Started",
-            "pages": ["introduction", "quickstart", "authentication", "concepts"]
+            "pages": [
+              "introduction",
+              "quickstart",
+              "authentication",
+              "concepts"
+            ]
           },
           {
             "group": "Build",
@@ -116,7 +140,12 @@
           },
           {
             "group": "SDKs & Examples",
-            "pages": ["sdks/overview", "sdks/curl", "sdks/node", "sdks/python"]
+            "pages": [
+              "sdks/overview",
+              "sdks/curl",
+              "sdks/node",
+              "sdks/python"
+            ]
           },
           {
             "group": "Operate",
@@ -134,7 +163,9 @@
         "groups": [
           {
             "group": "Overview",
-            "pages": ["api-reference/introduction"]
+            "pages": [
+              "api-reference/introduction"
+            ]
           },
           {
             "group": "Agents",
@@ -191,10 +222,17 @@
           {
             "group": "More Resources",
             "openapi": {
-              "source": "/openapi/agentix.json",
+              "source": "/openapi/agntix.json",
               "directory": "api-reference/generated",
               "filter": {
-                "tags": ["Models", "Analytics", "API Keys", "Contacts", "Call Campaigns", "Subscriptions"]
+                "tags": [
+                  "Models",
+                  "Analytics",
+                  "API Keys",
+                  "Contacts",
+                  "Call Campaigns",
+                  "Subscriptions"
+                ]
               }
             }
           }
@@ -219,7 +257,9 @@
         "groups": [
           {
             "group": "Releases",
-            "pages": ["changelog"]
+            "pages": [
+              "changelog"
+            ]
           }
         ]
       }

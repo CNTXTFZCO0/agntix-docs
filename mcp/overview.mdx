@@ -1,9 +1,9 @@
 ---
 title: "MCP Overview"
-description: "Connect Claude, Cursor, and any MCP-compatible AI client to your Agentix workspace through the Model Context Protocol."
+description: "Connect Claude, Cursor, and any MCP-compatible AI client to your Agntix workspace through the Model Context Protocol."
 ---
 
-The **Agentix MCP server** exposes the Agentix platform as [Model Context Protocol](https://modelcontextprotocol.io) tools. Point an MCP-compatible client — Claude Desktop, Cursor, ChatGPT, or your own agent — at it, authenticate with an organization API key, and the assistant can manage your agents, run chat sessions, provision phone numbers, and inspect analytics using natural language.
+The **Agntix MCP server** exposes the Agntix platform as [Model Context Protocol](https://modelcontextprotocol.io) tools. Point an MCP-compatible client — Claude Desktop, Cursor, ChatGPT, or your own agent — at it, authenticate with an organization API key, and the assistant can manage your agents, run chat sessions, provision phone numbers, and inspect analytics using natural language.
 
 Under the hood every MCP tool calls the same `api.agntix.ai` gateway documented in the [API Reference](/api-reference/introduction), with the **same authentication and RBAC scopes**. MCP is simply a second way to reach the platform — built for AI clients instead of your own code.
 
@@ -32,15 +32,15 @@ Under the hood every MCP tool calls the same `api.agntix.ai` gateway documented 
 
 ## MCP vs. the REST API
 
-Both reach the same platform through the same gateway. Choose based on *who* is making the call.
+Both reach the same platform through the same gateway. Choose based on _who_ is making the call.
 
-| | **MCP server** | **REST API** |
-|---|---|---|
-| Caller | An AI client (Claude, Cursor, your agent) | Your own application code |
-| Interface | Natural-language tool calls | HTTP requests you write |
-| Auth | Org API key / Bearer JWT | Org API key / Bearer JWT |
-| Enforcement | Same RBAC scopes & rate limits | Same RBAC scopes & rate limits |
-| Best for | Letting an assistant operate Agentix for you | Deterministic, programmatic integrations |
+|             | **MCP server**                              | **REST API**                             |
+| ----------- | ------------------------------------------- | ---------------------------------------- |
+| Caller      | An AI client (Claude, Cursor, your agent)   | Your own application code                |
+| Interface   | Natural-language tool calls                 | HTTP requests you write                  |
+| Auth        | Org API key / Bearer JWT                    | Org API key / Bearer JWT                 |
+| Enforcement | Same RBAC scopes & rate limits              | Same RBAC scopes & rate limits           |
+| Best for    | Letting an assistant operate Agntix for you | Deterministic, programmatic integrations |
 
 <Note>
   Every MCP tool maps 1:1 to a documented REST endpoint. If you can't do it over the API, you can't do it over MCP — and vice versa.
@@ -50,12 +50,12 @@ Both reach the same platform through the same gateway. Choose based on *who* is 
 
 ```mermaid
 flowchart LR
-  C["MCP client<br/>(Claude · Cursor · custom)"] -->|tools/call| M["Agentix MCP server"]
-  M -->|x-api-key / Bearer| G["Agentix gateway<br/>api.agntix.ai"]
+  C["MCP client<br/>(Claude · Cursor · custom)"] -->|tools/call| M["Agntix MCP server"]
+  M -->|x-api-key / Bearer| G["Agntix gateway<br/>api.agntix.ai"]
   G --> S["Agents · Chat · Voice · Tools · Telephony"]
 ```
 
-1. Your MCP client connects to the Agentix MCP server and discovers the available tools (`tools/list`).
+1. Your MCP client connects to the Agntix MCP server and discovers the available tools (`tools/list`).
 2. When the assistant decides to act, it issues a `tools/call`.
 3. The MCP server forwards the call to the `api.agntix.ai` gateway with your API key.
 4. The gateway applies the **same authentication, RBAC, and rate limits** as a direct API call, then returns the result to the assistant.

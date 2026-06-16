@@ -1,13 +1,13 @@
 ---
 title: "Event types"
-description: "Reference for every webhook event Agentix can deliver, with payload schemas and example bodies."
+description: "Reference for every webhook event Agntix can deliver, with payload schemas and example bodies."
 ---
 
 import AuthCallout from "/snippets/auth-callout.mdx";
 
 <AuthCallout />
 
-Agentix delivers webhooks via [Svix](https://svix.com). Configure endpoints from the dashboard's **Developer** section — see [Webhooks overview](/webhooks/overview).
+Agntix delivers webhooks via [Svix](https://svix.com). Configure endpoints from the dashboard's **Developer** section — see [Webhooks overview](/webhooks/overview).
 
 Voice and chat sessions emit two events **today**: `session.created` (when the call/conversation starts) and `session.ended` (when it closes, with the full post-call analysis attached). The other events on this page are on the roadmap — documented so you can design against them, but **not delivered as webhooks yet**.
 
@@ -23,7 +23,7 @@ Treat the top-level `id` (session UUID) as the **idempotency key**. Don't double
 
 ## `session.created` <Badge color="green">Available</Badge>
 
-Fired when a session is **initiated** — for outbound voice calls, this is *before pickup*. Use it to lock the originating task as "in-flight".
+Fired when a session is **initiated** — for outbound voice calls, this is _before pickup_. Use it to lock the originating task as "in-flight".
 
 <ResponseField name="id" type="string">The session id (UUID). Use as idempotency key.</ResponseField>
 <ResponseField name="eventType" type="string">Constant: `"session.created"`.</ResponseField>

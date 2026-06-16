@@ -1,6 +1,6 @@
 ---
 title: "API Reference"
-description: "Complete REST API reference for the Agentix platform. Interactive playgrounds, multi-language examples, and schema docs for every endpoint."
+description: "Complete REST API reference for the Agntix platform. Interactive playgrounds, multi-language examples, and schema docs for every endpoint."
 ---
 
 import ApiBaseUrl from "/snippets/api-base-url.mdx";
@@ -35,16 +35,16 @@ import AuthCallout from "/snippets/auth-callout.mdx";
 
 ## Conventions
 
-| Convention | Detail |
-|---|---|
-| **Base URL** | `https://api.agntix.ai` |
-| **Versioning** | Path-based (`/v1/…`, `/v2/…`). Major versions run side-by-side for ≥ 6 months. |
-| **Auth** | `x-api-key: pk_live_…` or `Authorization: Bearer <jwt>` — see [Authentication](/authentication). |
-| **Encoding** | UTF-8 JSON in and out, unless explicitly multipart. |
-| **Timestamps** | RFC 3339 / ISO 8601 in UTC, e.g. `2026-04-28T11:42:11Z`. |
-| **IDs** | Prefixed (`agnt_…`, `ses_…`, `msg_…`) — opaque, never parse them. |
-| **Pagination** | `?page=N&limit=N`, max `limit=100`. See [Pagination](/guides/pagination). |
-| **Errors** | Consistent `{ error: { code, message, status } }` envelope. See [Error Codes](/errors/error-codes). |
+| Convention     | Detail                                                                                              |
+| -------------- | --------------------------------------------------------------------------------------------------- |
+| **Base URL**   | `https://api.agntix.ai`                                                                             |
+| **Versioning** | Path-based (`/v1/…`, `/v2/…`). Major versions run side-by-side for ≥ 6 months.                      |
+| **Auth**       | `x-api-key: pk_live_…` or `Authorization: Bearer <jwt>` — see [Authentication](/authentication).    |
+| **Encoding**   | UTF-8 JSON in and out, unless explicitly multipart.                                                 |
+| **Timestamps** | RFC 3339 / ISO 8601 in UTC, e.g. `2026-04-28T11:42:11Z`.                                            |
+| **IDs**        | Prefixed (`agnt_…`, `ses_…`, `msg_…`) — opaque, never parse them.                                   |
+| **Pagination** | `?page=N&limit=N`, max `limit=100`. See [Pagination](/guides/pagination).                           |
+| **Errors**     | Consistent `{ error: { code, message, status } }` envelope. See [Error Codes](/errors/error-codes). |
 
 ## Interactive playground
 
@@ -52,7 +52,7 @@ Click any endpoint in the sidebar, fill in the fields, and press **Send**. The p
 
 ## How the spec stays in sync
 
-The OpenAPI spec at [`/openapi/agentix.json`](/openapi/agentix.json) is regenerated from the live gateway via [`scripts/sync-openapi.ts`](https://github.com/agntix/agntix-docs-portal/blob/main/scripts/sync-openapi.ts). Internal-only routes (admin, scheduler, billing infrastructure) are stripped at three independent layers before the spec is published.
+The OpenAPI spec at [`/openapi/agntix.json`](/openapi/agntix.json) is regenerated from the live gateway via [`scripts/sync-openapi.ts`](https://github.com/agntix/agntix-docs-portal/blob/main/scripts/sync-openapi.ts). Internal-only routes (admin, scheduler, billing infrastructure) are stripped at three independent layers before the spec is published.
 
 ## Streaming
 

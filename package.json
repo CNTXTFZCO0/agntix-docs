@@ -2,7 +2,7 @@
   "name": "agntix-docs-portal",
   "version": "1.0.0",
   "private": true,
-  "description": "Public Agentix developer portal (Mintlify). Hand-written guides + an OpenAPI spec synced from agntix-gateway with internal endpoints stripped.",
+  "description": "Public Agntix developer portal (Mintlify). Hand-written guides + an OpenAPI spec synced from agntix-gateway with internal endpoints stripped.",
   "scripts": {
     "dev": "mint dev",
     "broken-links": "mint broken-links",

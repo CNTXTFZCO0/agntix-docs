@@ -1,9 +1,9 @@
 ---
 title: "Voice calls"
-description: "Turn any Agentix agent into a voice agent — test from your browser, then place outbound or accept inbound PSTN calls."
+description: "Turn any Agntix agent into a voice agent — test from your browser, then place outbound or accept inbound PSTN calls."
 ---
 
-Voice support layers on top of any Agentix agent. Flip the **Voice Enabled** toggle, pick TTS/STT providers, and you can talk to the agent from your browser (LiveKit) or attach a phone number for PSTN inbound/outbound calls (Twilio, Telnyx, or BYON).
+Voice support layers on top of any Agntix agent. Flip the **Voice Enabled** toggle, pick TTS/STT providers, and you can talk to the agent from your browser (LiveKit) or attach a phone number for PSTN inbound/outbound calls (Twilio, Telnyx, or BYON).
 
 ## Prerequisites
 
@@ -22,7 +22,7 @@ Open your agent at `/agents/{id}`. In the top-right of the General Settings card
 Once enabled, a **Model Type** selector appears with two options:
 
 - **Pipeline (STT → LLM → TTS)** — three separate models. Best quality and most flexibility; slightly higher latency.
-- **Speech-to-Speech (STS)** — a single multimodal model (e.g. OpenAI Realtime, Gemini Live) handles audio in *and* out. Lowest latency; fewer provider choices.
+- **Speech-to-Speech (STS)** — a single multimodal model (e.g. OpenAI Realtime, Gemini Live) handles audio in _and_ out. Lowest latency; fewer provider choices.
 
 For most use cases pick **Pipeline**.
 
@@ -54,7 +54,7 @@ When you're happy, click **Save Changes** in the page header.
 
 ## Step 3: Test in the browser
 
-You don't need a phone number to test voice. Click the green **Test Agent** button in the page header. Agentix mints a short-lived LiveKit token, opens a room, and joins the agent automatically.
+You don't need a phone number to test voice. Click the green **Test Agent** button in the page header. Agntix mints a short-lived LiveKit token, opens a room, and joins the agent automatically.
 
 <Frame caption="LiveKit test room — microphone control on the left, disconnect on the right. The agent joins automatically once the room is created.">
   ![LiveKit test room](/images/guides/voice-calls/05-test-agent-livekit.png)
@@ -110,16 +110,16 @@ The call shows up under **Logs / History** the moment it connects, with full tra
 
 ## Advanced voice tuning
 
-The **Calls** tab also exposes these knobs (collapsed by default — open the *Advanced* section):
+The **Calls** tab also exposes these knobs (collapsed by default — open the _Advanced_ section):
 
-| Setting | What it does |
-|---|---|
-| **Allow Interruptions** | If on, the agent stops talking when the user starts speaking (barge-in). |
-| **Preemptive Synthesis** | Start TTS before the LLM finishes — cuts perceived latency at the cost of occasional cut-offs. |
-| **Welcome Mode** | Whether the agent greets the user immediately, after silence, or only when spoken to first. |
-| **Background Noise Config** | Add ambient noise (light office, café) to make the call feel more natural. |
-| **End-of-Turn Detection** | Heuristic (silence threshold) or **SmartTurn** (model-based). SmartTurn is better in noisy environments. |
-| **Interrupt Speech Duration / Min Words** | How long / how many words the user must speak before the agent yields. |
+| Setting                                   | What it does                                                                                             |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| **Allow Interruptions**                   | If on, the agent stops talking when the user starts speaking (barge-in).                                 |
+| **Preemptive Synthesis**                  | Start TTS before the LLM finishes — cuts perceived latency at the cost of occasional cut-offs.           |
+| **Welcome Mode**                          | Whether the agent greets the user immediately, after silence, or only when spoken to first.              |
+| **Background Noise Config**               | Add ambient noise (light office, café) to make the call feel more natural.                               |
+| **End-of-Turn Detection**                 | Heuristic (silence threshold) or **SmartTurn** (model-based). SmartTurn is better in noisy environments. |
+| **Interrupt Speech Duration / Min Words** | How long / how many words the user must speak before the agent yields.                                   |
 
 Tweak one at a time and re-test — these settings significantly affect perceived quality.
 

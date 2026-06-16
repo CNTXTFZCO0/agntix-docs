@@ -8,7 +8,7 @@ A knowledge store is a vector-indexed corpus tied to your organization. One agen
 ## Lifecycle
 
 1. **Create** — `POST /v1/chat/knowledge-store` with a name and description.
-2. **Upload** — Push PDFs, Markdown, or HTML. Agentix chunks (~1k tokens), embeds (Cohere), and indexes (Qdrant).
+2. **Upload** — Push PDFs, Markdown, or HTML. Agntix chunks (~1k tokens), embeds (Cohere), and indexes (Qdrant).
 3. **Process** — Documents are processed asynchronously. Subscribe to the [`knowledge_store.updated`](/webhooks/events) webhook to know when a doc is ready.
 4. **Attach** — Set `config.knowledgeStoreId` on an agent.
 

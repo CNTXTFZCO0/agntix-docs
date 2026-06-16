@@ -3,11 +3,11 @@ title: "Tools"
 description: "Let an agent call your APIs or built-in functions during a conversation — configure everything from the dashboard."
 ---
 
-A **tool** is something the agent can invoke mid-conversation: query your CRM, schedule a meeting, end a phone call, transfer to a human, or post to Slack. Agentix supports two types:
+A **tool** is something the agent can invoke mid-conversation: query your CRM, schedule a meeting, end a phone call, transfer to a human, or post to Slack. Agntix supports two types:
 
-| Type | What it is |
-|---|---|
-| **API Tool** | An HTTP endpoint Agentix calls on the agent's behalf. You define URL, method, headers, query/body schema. |
+| Type              | What it is                                                                                                                     |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| **API Tool**      | An HTTP endpoint Agntix calls on the agent's behalf. You define URL, method, headers, query/body schema.                       |
 | **Function Tool** | A built-in capability — `endPhoneCall`, `transferPhoneCall`, `detectVoicemail`, and similar — that runs in our infrastructure. |
 
 This guide walks you through creating an API tool, attaching it to an agent, and testing the round-trip — all from the dashboard.
@@ -33,7 +33,7 @@ Click **+ Create Tool**.
 The Create Tool modal collects:
 
 1. **Name** — 8–20 chars, lowercase letters, digits, and underscores only (e.g. `lookup_order_status`). The LLM sees this name verbatim — make it self-describing.
-2. **Description** — what the tool does. **The LLM uses this to decide when to call it** — be precise. Bad: *"queries orders"*. Good: *"Looks up the current status of a customer order by its order number. Returns status, expected delivery date, and shipping carrier."*
+2. **Description** — what the tool does. **The LLM uses this to decide when to call it** — be precise. Bad: _"queries orders"_. Good: _"Looks up the current status of a customer order by its order number. Returns status, expected delivery date, and shipping carrier."_
 3. **Type** — leave on **API Tool** for this guide.
 
 <Frame caption="Create Tool modal — API Tool selected. Name and description are the two highest-leverage fields.">
@@ -44,7 +44,7 @@ The Create Tool modal collects:
 
 Below the basics you'll see the request configuration:
 
-- **URL** — full HTTPS URL. May contain `{placeholders}` that Agentix fills from the schema you define in Step 4 (e.g. `https://api.example.com/orders/{orderId}`).
+- **URL** — full HTTPS URL. May contain `{placeholders}` that Agntix fills from the schema you define in Step 4 (e.g. `https://api.example.com/orders/{orderId}`).
 - **Method** — `GET`, `POST`, `PUT`, `PATCH`, `DELETE`.
 - **Body** — JSON template (for non-GET methods). Placeholders work here too.
 - **Headers** — key/value pairs. Common pattern: `Authorization: Bearer {YOUR_TOKEN}`.
@@ -55,7 +55,7 @@ Below the basics you'll see the request configuration:
 </Frame>
 
 <Tip>
-  Already have a working `curl` command? Click the **Import from curl** button at the top of the modal — Agentix parses it and fills URL, method, headers, body, and params for you.
+  Already have a working `curl` command? Click the **Import from curl** button at the top of the modal — Agntix parses it and fills URL, method, headers, body, and params for you.
 </Tip>
 
 ## Step 4: Define the input schema
@@ -101,7 +101,7 @@ Open your agent at `/agents/{id}`. Switch to the **Functions** tab on the right 
 
 The tab shows two groups:
 
-- **Built-in functions** — toggle on for *End Call*, *Transfer Call*, *Voicemail detection*. These are pre-configured; you only pick when they fire.
+- **Built-in functions** — toggle on for _End Call_, _Transfer Call_, _Voicemail detection_. These are pre-configured; you only pick when they fire.
 - **Custom Tools** — click **+ Add** to attach your newly-created tool. You can attach multiple.
 
 <Frame caption="Functions tab — your custom tool listed under Custom Tools after attaching.">
@@ -137,17 +137,17 @@ You can also see this in **Logs / History** for any real session — the tool ca
 
 ## Troubleshooting
 
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| Tool never fires | Description too vague | Rewrite the **Description** to explicitly say *when* the tool should be used; restate examples |
-| Tool fires too often | Description too aggressive | Soften the description: *"Use only when the user provides an order number."* |
-| 401/403 from your API | Header placeholder not filled | Double-check the **Headers** section; ensure no literal `{YOUR_TOKEN}` text |
-| Voice latency spike when tool fires | Slow endpoint | Cache server-side; aim for &lt; 500 ms p95 |
-| Agent invents tool arguments | Required fields missing in schema | Mark fields `required` in the JSON Schema |
+| Symptom                             | Likely cause                      | Fix                                                                                            |
+| ----------------------------------- | --------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Tool never fires                    | Description too vague             | Rewrite the **Description** to explicitly say _when_ the tool should be used; restate examples |
+| Tool fires too often                | Description too aggressive        | Soften the description: _"Use only when the user provides an order number."_                   |
+| 401/403 from your API               | Header placeholder not filled     | Double-check the **Headers** section; ensure no literal `{YOUR_TOKEN}` text                    |
+| Voice latency spike when tool fires | Slow endpoint                     | Cache server-side; aim for &lt; 500 ms p95                                                     |
+| Agent invents tool arguments        | Required fields missing in schema | Mark fields `required` in the JSON Schema                                                      |
 
 ## Function tools
 
-For **end call** / **transfer call** / **voicemail detection**, you don't need to build an API. Open the agent's **Functions** tab and toggle the built-in function on — Agentix handles the implementation. Configure conditions (e.g. transfer destination phone number) in the same panel.
+For **end call** / **transfer call** / **voicemail detection**, you don't need to build an API. Open the agent's **Functions** tab and toggle the built-in function on — Agntix handles the implementation. Configure conditions (e.g. transfer destination phone number) in the same panel.
 
 ## API alternative
 

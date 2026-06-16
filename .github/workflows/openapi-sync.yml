@@ -57,7 +57,7 @@ jobs:
 
             **Reviewer checklist:**
 
-            - [ ] Diff is limited to `openapi/agentix.json`.
+            - [ ] Diff is limited to `openapi/agntix.json`.
             - [ ] No internal paths leaked (lint passed).
             - [ ] Any new endpoints have been confirmed customer-safe with the owning team
                   (update `ROUTE_AUDIT.md` if the answer is yes).

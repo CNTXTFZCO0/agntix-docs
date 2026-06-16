@@ -7,18 +7,18 @@ import AuthCallout from "/snippets/auth-callout.mdx";
 
 <AuthCallout />
 
-Agentix uses [Svix](https://svix.com) for durable webhook delivery. Webhooks are how your backend learns the moment a call starts and the moment it ends — they are the primary glue between Agentix and your downstream systems.
+Agntix uses [Svix](https://svix.com) for durable webhook delivery. Webhooks are how your backend learns the moment a call starts and the moment it ends — they are the primary glue between Agntix and your downstream systems.
 
 ## Why webhooks?
 
-| Use case | Use this |
-|---|---|
-| Update a CRM when a call ends | **Webhooks** (durable) |
+| Use case                                  | Use this                                      |
+| ----------------------------------------- | --------------------------------------------- |
+| Update a CRM when a call ends             | **Webhooks** (durable)                        |
 | Live UI updates while a chat is happening | [SSE](/guides/streaming-events) (low-latency) |
 
 ## Adding a webhook endpoint
 
-In the Agentix dashboard left nav, open **Developer** (under *Integrations*) and click **+ Add Endpoint** in the top-right. A dialog opens with the following fields:
+In the Agntix dashboard left nav, open **Developer** (under _Integrations_) and click **+ Add Endpoint** in the top-right. A dialog opens with the following fields:
 
 <ParamField path="Endpoint URL" type="string" required>
   Your receiver, e.g. `https://hooks.acme.com/agntix`. Must be a public HTTPS URL.
@@ -35,7 +35,7 @@ In the Agentix dashboard left nav, open **Developer** (under *Integrations*) and
 
 Events delivered for outbound voice calls:
 
-- **`session.created`** — fires when the call is *initiated* (before pickup). Use it to lock the originating task as "in-flight".
+- **`session.created`** — fires when the call is _initiated_ (before pickup). Use it to lock the originating task as "in-flight".
 - **`session.ended`** — fires when the call closes, with the full post-call analysis attached. This is what your pipeline consumes.
 
 ## Lifecycle
