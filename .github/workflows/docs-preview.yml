@@ -33,7 +33,7 @@ jobs:
       - name: Validate OpenAPI spec
         run: |
           node -e "
-          const spec = require('./openapi/agentix.json');
+          const spec = require('./openapi/agntix.json');
           if (!spec.openapi) { console.error('Missing openapi version'); process.exit(1); }
           if (!spec.info?.title) { console.error('Missing info.title'); process.exit(1); }
           console.log('OpenAPI spec OK —', Object.keys(spec.paths || {}).length, 'paths');

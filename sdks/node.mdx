@@ -24,7 +24,7 @@ async function agntix(path, init = {}) {
     },
   });
   if (!res.ok) {
-    throw Object.assign(new Error(`Agentix ${res.status}`), {
+    throw Object.assign(new Error(`Agntix ${res.status}`), {
       status: res.status,
       body: await res.json().catch(() => null),
     });

@@ -1,6 +1,6 @@
 # Migration Guide — Public Mintlify Developer Portal
 
-> **Audience:** the engineer rolling out the Agentix public developer portal.
+> **Audience:** the engineer rolling out the Agntix public developer portal.
 >
 > **Scope:** everything from "no docs site exists" to "`docs.agntix.ai` is live, hardened, and self-maintaining."
 >
@@ -30,7 +30,7 @@
 
 ## 1. Why this shape
 
-The Agentix workspace already does most of the hard work for us:
+The Agntix workspace already does most of the hard work for us:
 
 - The **gateway** ([`agntix-gateway`](../agntix-gateway)) aggregates the chat-engine and voice-api OpenAPI specs and exposes a single merged spec at `GET /docs/json`.
 - That endpoint already filters internal paths via `OpenApiService.isInternalPath`.
@@ -66,7 +66,7 @@ So the strategy is straightforward:
                         │  writes
                         ▼
    ┌──────────────────────────────────────┐
-   │ openapi/agentix.json (committed)     │
+   │ openapi/agntix.json (committed)     │
    └────────────────────┬─────────────────┘
                         │  read by Mintlify
                         ▼
@@ -105,7 +105,7 @@ agntix-docs-portal/
 │   ├── sync-openapi.ts          ← LAYER 2 — fetch + filter + write spec
 │   └── lint-internal-paths.ts   ← LAYER 3 — CI guard against slug leaks
 ├── openapi/
-│   └── agentix.json             ← committed, generated artifact
+│   └── agntix.json             ← committed, generated artifact
 ├── snippets/                    ← reusable MDX
 │   ├── auth-callout.mdx
 │   └── api-base-url.mdx
@@ -116,7 +116,7 @@ agntix-docs-portal/
 ├── concepts.mdx
 ├── changelog.mdx
 ├── api-reference/
-│   └── introduction.mdx         ← (rest auto-generated from openapi/agentix.json)
+│   └── introduction.mdx         ← (rest auto-generated from openapi/agntix.json)
 ├── guides/
 │   ├── build-your-first-agent.mdx
 │   ├── chat-with-rag.mdx
@@ -155,17 +155,17 @@ This is the heart of the playbook. **No single layer is allowed to be the only d
 
 ### Layer 0 — Backend reality
 
-Removing an endpoint from the docs does **not** remove it from the network. Every internal controller must keep its existing guard (`AdminJwtAuthGuard`, `InternalGuard`, IP allowlist, etc.). The docs are about *visibility*; backend guards are about *authorization*.
+Removing an endpoint from the docs does **not** remove it from the network. Every internal controller must keep its existing guard (`AdminJwtAuthGuard`, `InternalGuard`, IP allowlist, etc.). The docs are about _visibility_; backend guards are about _authorization_.
 
 **Action items captured during the audit (track separately):**
 
-| Controller | File | Issue |
-|---|---|---|
-| `SchedulerController` | `chat-engine/src/scheduler/scheduler.controller.ts` | No guard — add `@UseGuards(AdminJwtAuthGuard)` |
-| `ModelsController.create` | `chat-engine/src/models/models.controller.ts` line 31 | `AdminJwtAuthGuard` is commented out — re-enable |
-| `OnboardingController` | `chat-engine/src/onboarding/onboarding.controller.ts` | No guard |
-| `WhatsappController.findAll` | `chat-engine/src/whatsapp/whatsapp.controller.ts` line 52 | No guard |
-| `UsersController` | `chat-engine/src/users/users.controller.ts` | Empty placeholder — delete or implement |
+| Controller                   | File                                                      | Issue                                            |
+| ---------------------------- | --------------------------------------------------------- | ------------------------------------------------ |
+| `SchedulerController`        | `chat-engine/src/scheduler/scheduler.controller.ts`       | No guard — add `@UseGuards(AdminJwtAuthGuard)`   |
+| `ModelsController.create`    | `chat-engine/src/models/models.controller.ts` line 31     | `AdminJwtAuthGuard` is commented out — re-enable |
+| `OnboardingController`       | `chat-engine/src/onboarding/onboarding.controller.ts`     | No guard                                         |
+| `WhatsappController.findAll` | `chat-engine/src/whatsapp/whatsapp.controller.ts` line 52 | No guard                                         |
+| `UsersController`            | `chat-engine/src/users/users.controller.ts`               | Empty placeholder — delete or implement          |
 
 ### Layer 1 — Source: the gateway's `isInternalPath`
 
@@ -206,9 +206,9 @@ It also exports `dropEmptyTags` and re-tests under `openapi.service.spec.ts` —
 1. Fetches `${GATEWAY_BASE_URL}/docs/json`.
 2. Walks every path. If the path matches a **deny** regex (defense-in-depth list mirroring `isInternalPath`), the script **fails the build with exit code 2**. This is what catches a misconfigured gateway.
 3. If the path matches the **allow** regex, it's written to the output. Otherwise it's logged as "skipped — add to allowlist if customer-safe."
-4. Drops internal-named tags, normalizes the `info` block, sets the canonical `servers[]`, and writes `openapi/agentix.json` (only if the contents actually changed — keeps git diffs minimal).
+4. Drops internal-named tags, normalizes the `info` block, sets the canonical `servers[]`, and writes `openapi/agntix.json` (only if the contents actually changed — keeps git diffs minimal).
 
-The committed `openapi/agentix.json` is the **only** source Mintlify reads. Manual edits are forbidden.
+The committed `openapi/agntix.json` is the **only** source Mintlify reads. Manual edits are forbidden.
 
 ### Layer 3 — Lint: `scripts/lint-internal-paths.ts`
 
@@ -233,17 +233,17 @@ The portal's IA is driven by the **customer journey**, not by backend services.
 
 ### Tab 1 — Documentation
 
-| Group | Pages |
-|---|---|
-| Getting Started | `introduction`, `quickstart`, `authentication`, `concepts` |
-| Build | `guides/build-your-first-agent`, `guides/chat-with-rag`, `guides/voice-calls`, `guides/call-campaigns`, `guides/knowledge-stores`, `guides/tools` |
-| Real-time | `guides/streaming-events`, `webhooks/overview`, `webhooks/events`, `webhooks/verify-signatures` |
-| SDKs & Examples | `sdks/overview`, `sdks/curl`, `sdks/node`, `sdks/python` |
-| Operate | `guides/rate-limits`, `guides/pagination`, `errors/error-codes`, `errors/troubleshooting` |
+| Group           | Pages                                                                                                                                             |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Getting Started | `introduction`, `quickstart`, `authentication`, `concepts`                                                                                        |
+| Build           | `guides/build-your-first-agent`, `guides/chat-with-rag`, `guides/voice-calls`, `guides/call-campaigns`, `guides/knowledge-stores`, `guides/tools` |
+| Real-time       | `guides/streaming-events`, `webhooks/overview`, `webhooks/events`, `webhooks/verify-signatures`                                                   |
+| SDKs & Examples | `sdks/overview`, `sdks/curl`, `sdks/node`, `sdks/python`                                                                                          |
+| Operate         | `guides/rate-limits`, `guides/pagination`, `errors/error-codes`, `errors/troubleshooting`                                                         |
 
 ### Tab 2 — API Reference
 
-A single group with `"openapi": { "source": "/openapi/agentix.json", "directory": "api-reference" }` — Mintlify auto-generates one page per operation, grouped by tag.
+A single group with `"openapi": { "source": "/openapi/agntix.json", "directory": "api-reference" }` — Mintlify auto-generates one page per operation, grouped by tag.
 
 ### Tab 3 — Changelog
 
@@ -287,7 +287,7 @@ If you're working locally:
 GATEWAY_BASE_URL=http://localhost:3001 pnpm sync:openapi
 ```
 
-The script writes `openapi/agentix.json`. Commit the result.
+The script writes `openapi/agntix.json`. Commit the result.
 
 ### 5.3 — Run the dev server
 
@@ -314,14 +314,14 @@ description: "One-line description used by Mintlify for SEO and the search index
 
 #### Component cheat-sheet
 
-| Component | Use for |
-|---|---|
-| `<Steps><Step title="…">` | Step-by-step guides (Quickstart, Build your first agent) |
-| `<CodeGroup>` | Multi-language code samples (always offer cURL + JS + Python in that order) |
-| `<ResponseField>` | API response schema documentation |
-| `<Tip>` / `<Warning>` / `<Note>` | Inline callouts |
-| `<Card>` / `<CardGroup>` | "Where to next" sections |
-| `<AccordionGroup><Accordion title="…">` | FAQ-style collapsibles (troubleshooting page) |
+| Component                               | Use for                                                                     |
+| --------------------------------------- | --------------------------------------------------------------------------- |
+| `<Steps><Step title="…">`               | Step-by-step guides (Quickstart, Build your first agent)                    |
+| `<CodeGroup>`                           | Multi-language code samples (always offer cURL + JS + Python in that order) |
+| `<ResponseField>`                       | API response schema documentation                                           |
+| `<Tip>` / `<Warning>` / `<Note>`        | Inline callouts                                                             |
+| `<Card>` / `<CardGroup>`                | "Where to next" sections                                                    |
+| `<AccordionGroup><Accordion title="…">` | FAQ-style collapsibles (troubleshooting page)                               |
 
 #### Reusable snippets
 
@@ -426,11 +426,11 @@ The portal looks consistent because of a few small constraints baked into `docs.
 
 Three GitHub Actions workflows ship in `.github/workflows/`:
 
-| Workflow | Trigger | What it does |
-|---|---|---|
-| `docs-preview.yml` | PR to `main` | Installs deps, runs `lint:internal`, validates the spec, posts a preview comment on the PR. The Mintlify GitHub app produces the preview itself. |
-| `docs-deploy.yml` | Push to `main` | Runs `pnpm check` + a sanity grep over `openapi/agentix.json`. Mintlify auto-deploys after the workflow succeeds. |
-| `openapi-sync.yml` | Nightly cron + `workflow_dispatch` + `repository_dispatch` (gateway release) | Re-runs `sync:openapi`, opens an auto-PR if the spec changed. Auto-PRs are tagged `documentation` + `automated` for filtering. |
+| Workflow           | Trigger                                                                      | What it does                                                                                                                                     |
+| ------------------ | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `docs-preview.yml` | PR to `main`                                                                 | Installs deps, runs `lint:internal`, validates the spec, posts a preview comment on the PR. The Mintlify GitHub app produces the preview itself. |
+| `docs-deploy.yml`  | Push to `main`                                                               | Runs `pnpm check` + a sanity grep over `openapi/agntix.json`. Mintlify auto-deploys after the workflow succeeds.                                 |
+| `openapi-sync.yml` | Nightly cron + `workflow_dispatch` + `repository_dispatch` (gateway release) | Re-runs `sync:openapi`, opens an auto-PR if the spec changed. Auto-PRs are tagged `documentation` + `automated` for filtering.                   |
 
 A push to `main` is the only path to production. Preview deploys are `noindex`. The auto-PR pattern means **a gateway change never silently ships to public docs** — a human reviewer always inspects the spec diff first.
 

@@ -3,13 +3,13 @@ title: "Tools"
 description: "Extend agent capabilities with API webhook tools and server-side function tools."
 ---
 
-**Tools** let your agents take action in the real world. When the LLM decides a tool should be called, Agentix executes it and feeds the result back into the conversation.
+**Tools** let your agents take action in the real world. When the LLM decides a tool should be called, Agntix executes it and feeds the result back into the conversation.
 
 There are two tool types:
 
-| Type | Description |
-|---|---|
-| `API_TOOL` | Makes an HTTP request to your webhook URL. No code required. |
+| Type            | Description                                                    |
+| --------------- | -------------------------------------------------------------- |
+| `API_TOOL`      | Makes an HTTP request to your webhook URL. No code required.   |
 | `FUNCTION_TOOL` | Calls a named server-side function registered in your backend. |
 
 <CardGroup cols={2}>
@@ -30,9 +30,9 @@ There are two tool types:
 ## Key concepts
 
 - **`name`** — the function name the LLM sees. Use UPPER_SNAKE_CASE for clarity (e.g. `GET_ACCOUNT_BALANCE`). Must be alphanumeric with underscores, no leading/trailing underscores.
-- **`description`** — tells the LLM *when* to call this tool. Be specific. The LLM uses this to decide whether to invoke the tool in a given context.
+- **`description`** — tells the LLM _when_ to call this tool. Be specific. The LLM uses this to decide whether to invoke the tool in a given context.
 - **`ajvPropertiesSchema`** — a JSON Schema object defining the tool's input parameters. The LLM constructs its call arguments based on this schema.
-- **`preExecutionMessage`** — an optional message spoken/sent to the user while the tool runs (e.g. *"Let me look that up for you..."*).
+- **`preExecutionMessage`** — an optional message spoken/sent to the user while the tool runs (e.g. _"Let me look that up for you..."_).
 
 ## API tool example
 

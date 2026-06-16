@@ -23,4 +23,4 @@ pnpm-debug.log*
 yarn-debug.log*
 
 # Generated artifacts (kept under version control on purpose are NOT here)
-# - openapi/agentix.json IS committed so the docs build is hermetic
+# - openapi/agntix.json IS committed so the docs build is hermetic

@@ -3,7 +3,7 @@
  * lint-internal-paths.ts — CI guard against leaking internal-only slugs into
  * the published documentation.
  *
- * Walks every `*.mdx` under the repo plus `openapi/agentix.json` and fails
+ * Walks every `*.mdx` under the repo plus `openapi/agntix.json` and fails
  * loudly if any of these terms appear in a public-facing context:
  *
  *   - any internal route prefix (admin, scheduler, metering, n8n, …)

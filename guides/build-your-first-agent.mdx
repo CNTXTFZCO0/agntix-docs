@@ -1,9 +1,9 @@
 ---
 title: "Build your first agent"
-description: "Create, configure, and test an Agentix AI agent from the dashboard in a couple of minutes."
+description: "Create, configure, and test an Agntix AI agent from the dashboard in a couple of minutes."
 ---
 
-An **agent** in Agentix is a configurable assistant — a model + a system prompt + an optional voice + optional tools. This guide walks you through creating one from the dashboard, configuring it on the agent detail page, and talking to it from the built-in test panel.
+An **agent** in Agntix is a configurable assistant — a model + a system prompt + an optional voice + optional tools. This guide walks you through creating one from the dashboard, configuring it on the agent detail page, and talking to it from the built-in test panel.
 
 ## Prerequisites
 
@@ -22,17 +22,17 @@ Click **+ Create Agent** to open the create dialog.
 
 ## Step 2: Create the agent
 
-The **Create New Agent** dialog asks for just three things — everything else is configured *after* the agent exists:
+The **Create New Agent** dialog asks for just three things — everything else is configured _after_ the agent exists:
 
 1. **Name** — at least 5 characters. Shown in lists, logs, and webhooks.
-2. **Language** — the agent's primary language. Agentix uses it to pick sensible default text, speech-to-text, and text-to-speech models for you.
+2. **Language** — the agent's primary language. Agntix uses it to pick sensible default text, speech-to-text, and text-to-speech models for you.
 3. **Voice Enabled** — on by default. Leave it on if the agent will make/receive phone or browser calls; turn it off for a chat-only agent. You can flip this later — see [Voice calls](/guides/voice-calls).
 
-<Frame caption="The Create New Agent dialog — name, language, and a voice toggle. Agentix fills in default models and a placeholder system prompt for you.">
+<Frame caption="The Create New Agent dialog — name, language, and a voice toggle. Agntix fills in default models and a placeholder system prompt for you.">
   ![Create Agent modal](/images/guides/build-your-first-agent/02-create-agent-modal.png)
 </Frame>
 
-Click **Create Agent**. Agentix creates a blank agent — with default models for your language and a placeholder system prompt — and redirects you to `/agents/{id}`, the agent detail / edit page.
+Click **Create Agent**. Agntix creates a blank agent — with default models for your language and a placeholder system prompt — and redirects you to `/agents/{id}`, the agent detail / edit page.
 
 <Note>
   Creation is a single step today — there's no multi-step template wizard. The system prompt, tools, and other settings are all configured on the detail page once the agent exists (next step).
@@ -42,7 +42,7 @@ Click **Create Agent**. Agentix creates a blank agent — with default models fo
 
 The detail page has two columns:
 
-- **Left** — the **System Prompt**, model, and language. A new agent starts with a placeholder prompt (*"This is a blank template, update the system prompt to fit your needs"*) — replace it with your own. Use the expand icon at the top-right of the textarea for a full-screen editor on longer prompts.
+- **Left** — the **System Prompt**, model, and language. A new agent starts with a placeholder prompt (_"This is a blank template, update the system prompt to fit your needs"_) — replace it with your own. Use the expand icon at the top-right of the textarea for a full-screen editor on longer prompts.
 - **Right** — tabs for **Calls**, **Chat**, **Behavior**, **Functions**, **Multi-agents**, **Analytics**, and **Widgets**. Each tab configures one slice of the agent.
 
 A good starter system prompt for an order-status example:
@@ -68,7 +68,7 @@ In the header you'll see a green **Test Agent** button.
   ![Test Agent button](/images/guides/build-your-first-agent/04-test-agent-button.png)
 </Frame>
 
-Click **Test Agent**. A LiveKit voice room or chat panel opens (depending on the **Voice Enabled** toggle). Type or speak a question your prompt should handle — e.g. *"What's the status of my order 1234?"* — and verify the agent stays in character.
+Click **Test Agent**. A LiveKit voice room or chat panel opens (depending on the **Voice Enabled** toggle). Type or speak a question your prompt should handle — e.g. _"What's the status of my order 1234?"_ — and verify the agent stays in character.
 
 If you also want to share the agent without giving testers dashboard access, use the two small icons next to **Test Agent**:
 

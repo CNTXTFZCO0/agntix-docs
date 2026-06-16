@@ -5,12 +5,12 @@ description: "Use an organization API key for server-to-server calls or a Clerk 
 
 import ApiBaseUrl from "/snippets/api-base-url.mdx";
 
-The Agentix gateway supports **two** authentication methods. You'll use one or the other depending on
-*who* is making the call.
+The Agntix gateway supports **two** authentication methods. You'll use one or the other depending on
+_who_ is making the call.
 
-| Method | Header | When to use |
-|---|---|---|
-| **API Key** | `x-api-key: pk_live_…` | Server-to-server, scripts, backend integrations |
+| Method         | Header                          | When to use                                                |
+| -------------- | ------------------------------- | ---------------------------------------------------------- |
+| **API Key**    | `x-api-key: pk_live_…`          | Server-to-server, scripts, backend integrations            |
 | **Bearer JWT** | `Authorization: Bearer <token>` | First-party browser apps that already have a Clerk session |
 
 <ApiBaseUrl />
@@ -112,11 +112,11 @@ fetch("https://api.agntix.ai/v1/chat/agents", {
 
 ## Permissions & errors
 
-| Status | Meaning |
-|---|---|
-| `200`/`201` | Authenticated and authorized |
-| `401 Unauthorized` | Missing or invalid auth header |
-| `403 Forbidden` | Authenticated, but the key/JWT lacks the required permission |
+| Status             | Meaning                                                      |
+| ------------------ | ------------------------------------------------------------ |
+| `200`/`201`        | Authenticated and authorized                                 |
+| `401 Unauthorized` | Missing or invalid auth header                               |
+| `403 Forbidden`    | Authenticated, but the key/JWT lacks the required permission |
 
 See the full list on the [error codes](/errors/error-codes) page.
 

@@ -1,6 +1,6 @@
 ---
 title: "Chat with RAG"
-description: "Ground an agent's answers in your own documents using an Agentix Knowledge Store."
+description: "Ground an agent's answers in your own documents using an Agntix Knowledge Store."
 ---
 
 A **Knowledge Store** is a vector-indexed collection of your documents (PDFs, DOCX, CSV, or scraped websites). Once you attach a store to an agent, every user message triggers a retrieval pass — the most relevant chunks are pulled into the prompt and the agent answers from them, with citations. This guide walks you through creating a store, uploading content, and wiring it to an agent — entirely from the dashboard.
@@ -23,7 +23,7 @@ Click the **+** button at the top of the left panel.
 
 ## Step 2: Create the store
 
-A modal opens with a single required field — **Name**. Give the store a descriptive name (8–50 characters). Examples: *Help Center*, *Product Docs FY26*, *Onboarding playbook*.
+A modal opens with a single required field — **Name**. Give the store a descriptive name (8–50 characters). Examples: _Help Center_, _Product Docs FY26_, _Onboarding playbook_.
 
 <Frame caption="Create Knowledge Store modal — name only. Embeddings, chunking, and the vector index are configured automatically.">
   ![Create store modal](/images/guides/chat-with-rag/02-create-store-modal.png)
@@ -49,7 +49,7 @@ In the store detail view, click the **Add** dropdown in the top right. Two sourc
 Select **Upload file** and pick one or more documents. Each file is queued and processed asynchronously:
 
 1. **Uploading** — bytes transfer to the gateway.
-2. **Processing** — Agentix chunks the document (~1k tokens per chunk), embeds it (Cohere by default), and writes vectors to Qdrant.
+2. **Processing** — Agntix chunks the document (~1k tokens per chunk), embeds it (Cohere by default), and writes vectors to Qdrant.
 3. **Ready** — the document is searchable.
 
 <Frame caption="Upload progress. Status badges flip from Uploading → Processing → Ready.">
@@ -87,7 +87,7 @@ Click **Test Agent** in the page header. Ask a question whose answer is in your 
   ![Test RAG response](/images/guides/chat-with-rag/07-test-rag-response.png)
 </Frame>
 
-Compare against the same question with the store *detached* — the difference should be obvious. If the agent ignores the store, see [Troubleshooting](#troubleshooting) below.
+Compare against the same question with the store _detached_ — the difference should be obvious. If the agent ignores the store, see [Troubleshooting](#troubleshooting) below.
 
 ## Verify it works
 
@@ -115,12 +115,12 @@ Compare against the same question with the store *detached* — the difference s
 
 ## Troubleshooting
 
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| Agent ignores the store | Document still **Processing**, or RAG not enabled on the agent | Wait for **Ready**; confirm the agent's `config.ragEnabled` is `true` and `knowledgeStoreId` is set |
-| Wrong document retrieved | **Top K** too low, or two stores overlap | Raise Top K to 8–10, or split overlapping content |
-| Slow responses | Rerank + Agentic RAG both on | Turn off Agentic RAG first; keep rerank |
-| "Quota exceeded" upload error | Org embedding quota | Contact support; quotas are per-plan |
+| Symptom                       | Likely cause                                                   | Fix                                                                                                 |
+| ----------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Agent ignores the store       | Document still **Processing**, or RAG not enabled on the agent | Wait for **Ready**; confirm the agent's `config.ragEnabled` is `true` and `knowledgeStoreId` is set |
+| Wrong document retrieved      | **Top K** too low, or two stores overlap                       | Raise Top K to 8–10, or split overlapping content                                                   |
+| Slow responses                | Rerank + Agentic RAG both on                                   | Turn off Agentic RAG first; keep rerank                                                             |
+| "Quota exceeded" upload error | Org embedding quota                                            | Contact support; quotas are per-plan                                                                |
 
 ## API alternative
 

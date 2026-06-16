@@ -7,18 +7,18 @@ import AuthCallout from "/snippets/auth-callout.mdx";
 
 <AuthCallout />
 
-Agentix exposes a programmatic call surface that lets your backend dial out, drive the conversation with per-call context, and pull structured analysis back when the call ends. This guide walks through the end-to-end loop — agent configuration, the trigger API, webhook delivery, and the session-detail endpoints.
+Agntix exposes a programmatic call surface that lets your backend dial out, drive the conversation with per-call context, and pull structured analysis back when the call ends. This guide walks through the end-to-end loop — agent configuration, the trigger API, webhook delivery, and the session-detail endpoints.
 
 ## The end-to-end loop
 
 1. **Configure the agent.** Define the system prompt with `{{placeholders}}` and turn on the post-call analysis fields you want returned (intent, resolution, sentiment, structured data extraction).
 2. **Trigger the call.** `POST /api/v1/phone-numbers/{phone_number_id}/calls/start` with the destination number, `agent_id`, and a free-form `session_variables` map.
-3. **Receive a webhook.** Agentix calls your registered endpoint on `session.created` and `session.ended`. Use the echoed `session_variables` to map the call back to your CRM record.
+3. **Receive a webhook.** Agntix calls your registered endpoint on `session.created` and `session.ended`. Use the echoed `session_variables` to map the call back to your CRM record.
 4. **Pull full details (optional).** `GET /api/v1/chat/sessions/{id}` and `/messages` to fetch the full transcript and analysis when you need more than the webhook summary.
 
 ```mermaid
 flowchart LR
-  A[Your backend] -->|1. Trigger call| B[Agentix Voice Agent]
+  A[Your backend] -->|1. Trigger call| B[Agntix Voice Agent]
   B --> C[Live conversation]
   C --> D[Post-call analysis]
   D -->|3. Webhook| A
@@ -46,7 +46,7 @@ To kick off a call programmatically you need three things plus your `session_var
 
 ### Finding the `agent_id`
 
-Open the agent in the Agentix dashboard. The ID is surfaced in two places on the agent detail screen:
+Open the agent in the Agntix dashboard. The ID is surfaced in two places on the agent detail screen:
 
 1. **Header line** — directly under the agent name, shown as `ID: d796…953a` with a copy icon.
 2. **Browser URL** — the path is `app.agntix.ai/en/agents/<agent_id>`, so the last segment is the ID.
@@ -227,7 +227,7 @@ curl https://api.agntix.ai/api/v1/chat/sessions/$SESSION_ID/messages \
 1. Receive `session.ended` webhook.
 2. Persist the summary fields immediately (for dashboards).
 3. Asynchronously fetch `/sessions/{id}` and `/sessions/{id}/messages` and stash in object storage (S3/GCS) for the reviewer UI.
-</Tip>
+   </Tip>
 
 ## End-to-end example
 
@@ -245,7 +245,7 @@ The full lifecycle for **one** outbound call:
 └────────────────────────────────────────────────────────────┘
                           │
                           ▼
-                  Agentix dials contact
+                  Agntix dials contact
                           │
                           ▼
                 Webhook: session.created
@@ -273,27 +273,27 @@ The full lifecycle for **one** outbound call:
 
 ### Endpoints
 
-| Purpose | Method | Path |
-|---------|--------|------|
-| List phone numbers | `GET` | `/api/v1/phone-numbers?size=50` |
+| Purpose               | Method | Path                                                  |
+| --------------------- | ------ | ----------------------------------------------------- |
+| List phone numbers    | `GET`  | `/api/v1/phone-numbers?size=50`                       |
 | Trigger outbound call | `POST` | `/api/v1/phone-numbers/{phone_number_id}/calls/start` |
-| Get session summary | `GET` | `/api/v1/chat/sessions/{sessionId}` |
-| Get session messages | `GET` | `/api/v1/chat/sessions/{sessionId}/messages` |
+| Get session summary   | `GET`  | `/api/v1/chat/sessions/{sessionId}`                   |
+| Get session messages  | `GET`  | `/api/v1/chat/sessions/{sessionId}/messages`          |
 
 All endpoints are hosted at `https://api.agntix.ai` and require the `x-api-key` header.
 
 ### Webhook events
 
-| Event | Fires when | Has analysis? |
-|-------|------------|----------------|
-| `session.created` | Call initiated | No |
-| `session.ended` | Call closed | Yes |
+| Event             | Fires when     | Has analysis? |
+| ----------------- | -------------- | ------------- |
+| `session.created` | Call initiated | No            |
+| `session.ended`   | Call closed    | Yes           |
 
 ### Pre-launch checklist
 
 1. **Decide your correlation keys.** Standardise on `session_variables` keys for CRM mapping (`crmContactId`, `campaignId`, `taskId`).
 2. **Define resolution + extraction schemas.** Write the resolution definition and lock the data-extraction field set in the dashboard. See [Post-call analysis](/guides/post-call-analysis).
-3. **Whitelist webhook IPs.** Allow the Agentix outbound webhook IPs through your firewall.
+3. **Whitelist webhook IPs.** Allow the Agntix outbound webhook IPs through your firewall.
 4. **Set dialing rate limits.** Match your outbound concurrency to your telephony trunk capacity and the receiving population's tolerance.
 5. **Set transcript retention.** Decide where you persist transcripts + recordings (recommend S3/GCS with a lifecycle policy).
 6. **Stage a soft-launch run.** Trigger 10–20 calls in a controlled window before turning on full-volume traffic.

@@ -32,7 +32,7 @@ jobs:
       - name: Sanity-check the committed OpenAPI spec
         run: |
           node -e "
-          const spec = require('./openapi/agentix.json');
+          const spec = require('./openapi/agntix.json');
           const internal = /(\/admin\/|\/scheduler\/|\/internal\/|\/n8n\/|\/queue\/admin\/|\/users\/|\/whatsapp\/receive)/;
           const leaked = Object.keys(spec.paths || {}).filter(p => internal.test(p));
           if (leaked.length) {
