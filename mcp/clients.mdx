@@ -30,7 +30,7 @@ Every client points at the same [endpoint](/mcp/connect) and authenticates with 
               "args": [
                 "-y",
                 "mcp-remote",
-                "https://mcp.agntix.ai/v1",
+                "https://mcp.agntix.ai/mcp",
                 "--header",
                 "x-api-key:pk_live_xxxxxxxxxxxxxxxxxxxxxxxx"
               ]
@@ -45,6 +45,7 @@ Every client points at the same [endpoint](/mcp/connect) and authenticates with 
         composer. Ask *"list my Agentix agents"* to confirm.
       </Step>
     </Steps>
+
   </Tab>
 
   <Tab title="Cursor">
@@ -61,7 +62,7 @@ Every client points at the same [endpoint](/mcp/connect) and authenticates with 
         {
           "mcpServers": {
             "agntix": {
-              "url": "https://mcp.agntix.ai/v1",
+              "url": "https://mcp.agntix.ai/mcp",
               "headers": {
                 "x-api-key": "pk_live_xxxxxxxxxxxxxxxxxxxxxxxx"
               }
@@ -76,6 +77,7 @@ Every client points at the same [endpoint](/mcp/connect) and authenticates with 
         listed. Toggle it on if needed.
       </Step>
     </Steps>
+
   </Tab>
 
   <Tab title="Other clients">
@@ -86,7 +88,7 @@ Every client points at the same [endpoint](/mcp/connect) and authenticates with 
     {
       "mcpServers": {
         "agntix": {
-          "url": "https://mcp.agntix.ai/v1",
+          "url": "https://mcp.agntix.ai/mcp",
           "headers": {
             "x-api-key": "pk_live_xxxxxxxxxxxxxxxxxxxxxxxx"
           }
@@ -97,6 +99,7 @@ Every client points at the same [endpoint](/mcp/connect) and authenticates with 
 
     If your client only supports local/`stdio` servers, wrap the endpoint with the
     [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) bridge as shown in the Claude Desktop tab.
+
   </Tab>
 </Tabs>
 
@@ -108,11 +111,11 @@ Every client points at the same [endpoint](/mcp/connect) and authenticates with 
 
 ## Troubleshooting
 
-| Symptom | Likely cause |
-|---|---|
-| Tools don't appear | Client not restarted, or the server failed to start — check the client's MCP logs. |
-| `401 Unauthorized` | Missing or invalid `x-api-key` / Bearer token. |
-| `403 Forbidden` | The key is valid but lacks the scope for that tool. Issue a key with the right scopes. |
-| `npx` errors in Claude Desktop | Node.js 20+ must be installed and on your `PATH` for the `mcp-remote` bridge. |
+| Symptom                        | Likely cause                                                                           |
+| ------------------------------ | -------------------------------------------------------------------------------------- |
+| Tools don't appear             | Client not restarted, or the server failed to start — check the client's MCP logs.     |
+| `401 Unauthorized`             | Missing or invalid `x-api-key` / Bearer token.                                         |
+| `403 Forbidden`                | The key is valid but lacks the scope for that tool. Issue a key with the right scopes. |
+| `npx` errors in Claude Desktop | Node.js 20+ must be installed and on your `PATH` for the `mcp-remote` bridge.          |
 
 See the full list on the [error codes](/errors/error-codes) page.

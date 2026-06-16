@@ -8,7 +8,7 @@ The Agentix MCP server is a **remote** MCP server. Any client that speaks the Mo
 ## Endpoint
 
 ```text
-https://mcp.agntix.ai/v1
+https://mcp.agntix.ai/mcp
 ```
 
 <Info>
@@ -19,19 +19,19 @@ https://mcp.agntix.ai/v1
 
 ## Transport
 
-| Transport | Use it when |
-|---|---|
-| **Streamable HTTP** (recommended) | Your client supports remote MCP servers natively (Cursor, recent Claude clients, custom SDK clients). |
-| **stdio bridge** | Your client only supports local/`stdio` servers. Run the [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) adapter, which proxies a local stdio server to the remote HTTP endpoint. |
+| Transport                         | Use it when                                                                                                                                                                                |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Streamable HTTP** (recommended) | Your client supports remote MCP servers natively (Cursor, recent Claude clients, custom SDK clients).                                                                                      |
+| **stdio bridge**                  | Your client only supports local/`stdio` servers. Run the [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) adapter, which proxies a local stdio server to the remote HTTP endpoint. |
 
 ## Authentication
 
 The MCP server uses the **same credentials as the REST API** — see [Authentication](/authentication) for how to create a key.
 
-| Method | Header forwarded upstream | When to use |
-|---|---|---|
-| **API Key** (recommended) | `x-api-key: pk_live_…` | Server-to-server, local dev, scripts |
-| **Bearer JWT** | `Authorization: Bearer <token>` | First-party apps with an existing Clerk session |
+| Method                    | Header forwarded upstream       | When to use                                     |
+| ------------------------- | ------------------------------- | ----------------------------------------------- |
+| **API Key** (recommended) | `x-api-key: pk_live_…`          | Server-to-server, local dev, scripts            |
+| **Bearer JWT**            | `Authorization: Bearer <token>` | First-party apps with an existing Clerk session |
 
 The scopes on the key apply to every tool call. A `chat:read` key can only invoke read tools; write/delete tools return `403 Forbidden`.
 
@@ -51,7 +51,7 @@ Most clients accept either a remote URL with headers, or a stdio command. Use wh
 {
   "mcpServers": {
     "agntix": {
-      "url": "https://mcp.agntix.ai/v1",
+      "url": "https://mcp.agntix.ai/mcp",
       "headers": {
         "x-api-key": "pk_live_xxxxxxxxxxxxxxxxxxxxxxxx"
       }
@@ -68,7 +68,7 @@ Most clients accept either a remote URL with headers, or a stdio command. Use wh
       "args": [
         "-y",
         "mcp-remote",
-        "https://mcp.agntix.ai/v1",
+        "https://mcp.agntix.ai/mcp",
         "--header",
         "x-api-key:pk_live_xxxxxxxxxxxxxxxxxxxxxxxx"
       ]
@@ -81,6 +81,6 @@ Most clients accept either a remote URL with headers, or a stdio command. Use wh
 
 ## Verify the connection
 
-Once configured, ask your assistant to list its Agentix tools, or have it run a read-only action such as *"list my Agentix agents."* A successful response confirms the server URL and key are correct. A `401` means the key is missing or invalid; a `403` means the key lacks the scope for that tool.
+Once configured, ask your assistant to list its Agentix tools, or have it run a read-only action such as _"list my Agentix agents."_ A successful response confirms the server URL and key are correct. A `401` means the key is missing or invalid; a `403` means the key lacks the scope for that tool.
 
 See the [Client Setup](/mcp/clients) page for step-by-step configuration of Claude Desktop, Cursor, and other clients.
