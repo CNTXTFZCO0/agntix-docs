@@ -11,7 +11,7 @@
     "check": "pnpm run broken-links && pnpm run lint:internal"
   },
   "devDependencies": {
-    "@types/node": "^22.7.0",
+    "@types/node": "^26.6.6",
     "axios": "^1.7.7",
     "mint": "^4.0.0",
     "tsx": "^4.19.1",
