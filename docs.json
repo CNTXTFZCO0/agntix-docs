@@ -79,7 +79,8 @@
   "seo": {
     "indexing": "navigable",
     "metatags": {
-      "robots": "index, follow"
+      "robots": "index, follow",
+      "google-site-verification": "4AospHmT8Q2v1R2NjbCAomAlfNONanFBTr2jYFjV1bE"
     }
   },
   "api": {
